@@ -1,7 +1,8 @@
 {
   "name": "site-node",
-  "description": "Serveur Beta 1 Beta 2 - test"
   "version": "1.0.0",
+  "description": "Serveur Beta 1 Beta 2 - test",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
