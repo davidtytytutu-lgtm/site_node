@@ -3,8 +3,15 @@ const express = require("express");
 const WebSocket = require("ws");
 
 const app = express();
-const server = http.createServer(app);
 
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    next();
+});
+
+const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 const users = new Map();
@@ -24,11 +31,14 @@ app.get("/api/files", (req, res) => {
     res.json(repoFiles);
 });
 
-function broadcast(data) {
+function broadcast(data, except = null) {
     const message = JSON.stringify(data);
 
     wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
+        if (
+            client !== except &&
+            client.readyState === WebSocket.OPEN
+        ) {
             client.send(message);
         }
     });
@@ -55,7 +65,6 @@ wss.on("connection", socket => {
             return;
         }
 
-        // Connexion utilisateur
         if (data.type === "join") {
 
             const username =
@@ -72,17 +81,18 @@ wss.on("connection", socket => {
                 message: `Bienvenue ${username}.`
             }));
 
+            // Les autres utilisateurs sont prévenus,
+            // mais pas celui qui vient d'arriver.
             broadcast({
                 type: "join",
                 username: username
-            });
+            }, socket);
 
             sendUsers();
 
             return;
         }
 
-        // Message du chat
         if (data.type === "chat") {
 
             const user = users.get(socket);
@@ -96,13 +106,14 @@ wss.on("connection", socket => {
 
             if (!message) return;
 
-            // Easter egg
             if (
                 message
-                .trim()
-                .toLowerCase()
-                .replace(/[.!?]+$/g, "") === "i love you marley"
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[.!?]+$/g, "") ===
+                "i love you marley"
             ) {
+
                 broadcast({
                     type: "marley",
                     username: user.name
@@ -123,18 +134,18 @@ wss.on("connection", socket => {
 
         const user = users.get(socket);
 
-        if (user) {
+        if (!user) return;
 
-            broadcast({
-                type: "leave",
-                username: user.name
-            });
+        broadcast({
+            type: "leave",
+            username: user.name
+        }, socket);
 
-            users.delete(socket);
-            sendUsers();
-        }
+        users.delete(socket);
 
-        console.log("Connexion fermée");
+        sendUsers();
+
+        console.log(`${user.name} est parti.`);
     });
 });
 
