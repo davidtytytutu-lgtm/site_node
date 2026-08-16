@@ -1,13 +1,14 @@
 {
   "name": "site-node",
   "version": "1.0.0",
-  "description": "Serveur Beta 1 Beta 2 - test",
+  "description": "Serveur Node.js pour Terminal Beta 1 et Beta 2",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^5.1.0",
-    "ws": "^8.18.0"
+    "multer": "^2.0.2",
+    "ws": "^8.18.3"
   }
 }
