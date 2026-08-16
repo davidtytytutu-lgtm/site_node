@@ -8,25 +8,27 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 app.get("/", (req, res) => {
-    res.send("Serveur Beta 1 en ligne !");
+    res.send("Serveur Beta 1 / Beta 2 opérationnel !");
 });
 
 wss.on("connection", (socket) => {
-    console.log("Un site est connecté.");
+    console.log("Un client est connecté.");
 
     socket.on("message", (message) => {
-        console.log("Message reçu :", message.toString());
+        const text = message.toString();
 
-        // Envoyer le message à tous les autres sites connectés
+        console.log("Message reçu :", text);
+
+        // Envoyer le message à tous les clients connectés
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
-                client.send(message.toString());
+                client.send(text);
             }
         });
     });
 
     socket.on("close", () => {
-        console.log("Un site s'est déconnecté.");
+        console.log("Un client s'est déconnecté.");
     });
 });
 
