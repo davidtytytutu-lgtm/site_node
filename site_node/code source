@@ -8,7 +8,7 @@
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0">
 
-<title>TERMINAL // SYSTEM</title>
+<title>TERMINAL // NETWORK</title>
 
 <style>
 
@@ -43,9 +43,262 @@ body {
         0 0 4px rgba(0,255,102,.5);
 }
 
+/* =====================================================
+   MEDIA LIGHTBOX
+===================================================== */
+
+#mediaLightbox {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 2000;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 30px;
+
+    background:
+        rgba(0,0,0,.88);
+
+    backdrop-filter:
+        blur(5px);
+
+    cursor: zoom-out;
+}
+
 
 /* =====================================================
-   CRT SCREEN
+   LIGHTBOX CONTENT
+===================================================== */
+
+#mediaLightboxContent {
+
+    position: relative;
+
+    max-width: 95vw;
+
+    max-height: 95vh;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid #00ff66;
+
+    background:
+        rgba(0,10,4,.96);
+
+    box-shadow:
+        0 0 30px rgba(0,255,102,.25),
+        inset 0 0 30px rgba(0,255,102,.05);
+
+    padding: 12px;
+
+    cursor: default;
+}
+
+
+/* =====================================================
+   VIEWER
+===================================================== */
+
+#mediaLightboxViewer {
+
+    max-width: 90vw;
+
+    max-height: 82vh;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+
+#mediaLightboxViewer img {
+
+    display: block;
+
+    max-width: 90vw;
+
+    max-height: 82vh;
+
+    width: auto;
+
+    height: auto;
+
+    object-fit: contain;
+
+    box-shadow:
+        0 0 20px rgba(0,255,102,.15);
+}
+
+
+#mediaLightboxViewer video {
+
+    display: block;
+
+    max-width: 90vw;
+
+    max-height: 82vh;
+
+    width: auto;
+
+    height: auto;
+
+    background: #000;
+
+    box-shadow:
+        0 0 20px rgba(0,255,102,.15);
+}
+
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
+#mediaLightboxClose {
+
+    position: absolute;
+
+    top: -15px;
+
+    right: -15px;
+
+    width: 34px;
+
+    height: 34px;
+
+    border:
+        1px solid #00ff66;
+
+    background:
+        #001a08;
+
+    color:
+        #00ff66;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    z-index: 10;
+
+    box-shadow:
+        0 0 10px rgba(0,255,102,.3);
+}
+
+
+#mediaLightboxClose:hover {
+
+    background:
+        #00ff66;
+
+    color:
+        #001a08;
+
+}
+
+
+/* =====================================================
+   FILE NAME
+===================================================== */
+
+#mediaLightboxName {
+
+    width: 100%;
+
+    margin-top: 8px;
+
+    padding-top: 6px;
+
+    border-top:
+        1px solid rgba(0,255,102,.3);
+
+    text-align: center;
+
+    font-size: 11px;
+
+    word-break: break-all;
+
+    opacity: .8;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+    #mediaLightbox {
+
+        padding: 15px;
+
+    }
+
+
+    #mediaLightboxContent {
+
+        max-width: 100vw;
+
+        max-height: 95vh;
+
+        padding: 8px;
+
+    }
+
+
+    #mediaLightboxViewer {
+
+        max-width: 96vw;
+
+        max-height: 82vh;
+
+    }
+
+
+    #mediaLightboxViewer img,
+    #mediaLightboxViewer video {
+
+        max-width: 96vw;
+
+        max-height: 80vh;
+
+    }
+
+
+    #mediaLightboxClose {
+
+        top: -10px;
+
+        right: -10px;
+
+    }
+
+}
+
+
+/* =====================================================
+   CRT
 ===================================================== */
 
 #crt {
@@ -60,7 +313,7 @@ body {
 
     transform:
         perspective(900px)
-        scale(0.985);
+        scale(.985);
 
     background:
         radial-gradient(
@@ -70,18 +323,10 @@ body {
         );
 
     box-shadow:
-
         inset 0 0 100px rgba(0,0,0,.95),
-
         inset 0 0 30px rgba(0,255,100,.08),
-
         0 0 30px #000;
 }
-
-
-/* =====================================================
-   CRT CURVATURE
-===================================================== */
 
 #crt::before {
 
@@ -98,7 +343,6 @@ body {
     border-radius: 8%;
 
     background:
-
         radial-gradient(
             ellipse at center,
             transparent 55%,
@@ -123,7 +367,6 @@ body {
     z-index: 950;
 
     background:
-
         repeating-linear-gradient(
             to bottom,
             rgba(255,255,255,.025) 0px,
@@ -149,7 +392,7 @@ body {
 
 
 /* =====================================================
-   VHS NOISE
+   VHS
 ===================================================== */
 
 #vhs {
@@ -165,7 +408,6 @@ body {
     opacity: .12;
 
     background-image:
-
         repeating-linear-gradient(
             0deg,
             transparent 0px,
@@ -180,34 +422,29 @@ body {
 @keyframes vhsMove {
 
     0% {
-        transform:
-            translate(0,0);
+        transform: translate(0,0);
     }
 
     25% {
-        transform:
-            translate(2px,-1px);
+        transform: translate(2px,-1px);
     }
 
     50% {
-        transform:
-            translate(-1px,1px);
+        transform: translate(-1px,1px);
     }
 
     75% {
-        transform:
-            translate(1px,0);
+        transform: translate(1px,0);
     }
 
     100% {
-        transform:
-            translate(0,0);
+        transform: translate(0,0);
     }
 }
 
 
 /* =====================================================
-   VHS RGB GLITCH
+   RGB GLITCH
 ===================================================== */
 
 #rgb-glitch {
@@ -225,7 +462,6 @@ body {
     opacity: .04;
 
     background:
-
         linear-gradient(
             90deg,
             rgba(255,0,0,.5),
@@ -240,11 +476,7 @@ body {
 
 @keyframes rgbShift {
 
-    0% {
-        transform: translateX(0);
-    }
-
-    95% {
+    0%,95%,100% {
         transform: translateX(0);
     }
 
@@ -258,10 +490,6 @@ body {
 
     98% {
         transform: translateX(2px);
-    }
-
-    100% {
-        transform: translateX(0);
     }
 }
 
@@ -291,7 +519,7 @@ body {
 
 #bootText {
 
-    width: min(700px, 90%);
+    width: min(700px,90%);
 
     line-height: 1.5;
 
@@ -302,7 +530,7 @@ body {
 
 #bootBar {
 
-    width: min(700px, 90%);
+    width: min(700px,90%);
 
     height: 20px;
 
@@ -322,18 +550,16 @@ body {
     box-shadow:
         0 0 10px #00ff66;
 
-    transition:
-        width .08s linear;
+    transition: width .08s linear;
 }
 
 #bootPercent {
-
     margin-top: 10px;
 }
 
 
 /* =====================================================
-   MAIN GUI
+   APP
 ===================================================== */
 
 #app {
@@ -351,14 +577,15 @@ body {
     gap: 12px;
 
     grid-template-columns:
-        1.6fr
+        1.4fr
         1fr
         1fr;
 
     grid-template-rows:
         55px
         1fr
-        220px;
+        1fr
+        180px;
 }
 
 
@@ -368,11 +595,9 @@ body {
 
 #header {
 
-    grid-column:
-        1 / 4;
+    grid-column: 1 / 4;
 
-    border:
-        1px solid #00ff66;
+    border: 1px solid #00ff66;
 
     display: flex;
 
@@ -397,7 +622,6 @@ body {
 }
 
 #connection {
-
     font-size: 13px;
 }
 
@@ -414,8 +638,7 @@ body {
 
     min-height: 0;
 
-    border:
-        1px solid #00ff66;
+    border: 1px solid #00ff66;
 
     background:
         rgba(0,10,4,.82);
@@ -464,8 +687,11 @@ body {
     position: absolute;
 
     top: 32px;
+
     bottom: 40px;
+
     left: 0;
+
     right: 0;
 
     padding: 10px;
@@ -482,7 +708,9 @@ body {
     position: absolute;
 
     bottom: 0;
+
     left: 0;
+
     right: 0;
 
     height: 40px;
@@ -533,8 +761,11 @@ body {
     position: absolute;
 
     top: 32px;
+
     bottom: 42px;
+
     left: 0;
+
     right: 0;
 
     padding: 10px;
@@ -549,7 +780,9 @@ body {
     position: absolute;
 
     bottom: 0;
+
     left: 0;
+
     right: 0;
 
     height: 42px;
@@ -603,36 +836,189 @@ body {
 
 
 /* =====================================================
-   MATRIX
+   MEDIA
 ===================================================== */
 
-#matrixPanel {
+#mediaPanel {
 
-    grid-column: 1;
+    grid-column: 1 / 3;
 
     grid-row: 3;
 }
 
-#matrix {
+#mediaContent {
 
     position: absolute;
 
     inset: 32px 0 0 0;
 
+    display: flex;
+
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+#mediaControls {
+
+    padding: 8px;
+
+    border-bottom:
+        1px solid rgba(0,255,102,.35);
+
+    display: flex;
+
+    gap: 8px;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+}
+
+#mediaFile {
+
+    max-width: 220px;
+
+    color: #00ff66;
+
+    font-family:
+        "Courier New",
+        monospace;
+}
+
+.mediaButton {
+
+    background: #001a08;
+
+    color: #00ff66;
+
+    border: 1px solid #00ff66;
+
+    padding: 5px 10px;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    cursor: pointer;
+}
+
+.mediaButton:hover {
+
+    background: #00ff66;
+
+    color: #001a08;
+}
+
+#mediaStatus {
+
+    font-size: 11px;
+
     width: 100%;
-    height: calc(100% - 32px);
+}
+
+#mediaProgress {
+
+    width: 100%;
+
+    height: 8px;
+
+    border: 1px solid #00ff66;
+
+    display: none;
+}
+
+#mediaProgressBar {
+
+    height: 100%;
+
+    width: 0%;
+
+    background: #00ff66;
+
+    box-shadow:
+        0 0 8px #00ff66;
+}
+
+#mediaList {
+
+    flex: 1;
+
+    overflow-y: auto;
+
+    padding: 8px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fill,minmax(130px,1fr));
+
+    gap: 8px;
+}
+
+.mediaItem {
+
+    border:
+        1px solid rgba(0,255,102,.5);
+
+    padding: 6px;
+
+    min-width: 0;
+
+    background:
+        rgba(0,20,7,.7);
+}
+
+.mediaPreview {
+
+    width: 100%;
+
+    height: 90px;
+
+    object-fit: contain;
+
+    background: #000;
+
+    display: block;
+
+    margin-bottom: 5px;
+}
+
+.mediaName {
+
+    font-size: 10px;
+
+    word-break: break-all;
+
+    margin-bottom: 4px;
+}
+
+.mediaInfo {
+
+    font-size: 9px;
+
+    opacity: .7;
+
+    margin-bottom: 5px;
+}
+
+.mediaOpen {
+
+    color: #00ff66;
+
+    font-size: 10px;
 }
 
 
 /* =====================================================
-   INFINITE DIR
+   DIR
 ===================================================== */
 
 #dirPanel {
 
-    grid-column: 2 / 4;
+    grid-column: 3;
 
-    grid-row: 3;
+    grid-row: 3 / 5;
 }
 
 #dirOutput {
@@ -671,6 +1057,30 @@ body {
 
 
 /* =====================================================
+   MATRIX
+===================================================== */
+
+#matrixPanel {
+
+    grid-column: 1 / 3;
+
+    grid-row: 4;
+}
+
+#matrix {
+
+    position: absolute;
+
+    inset: 32px 0 0 0;
+
+    width: 100%;
+
+    height:
+        calc(100% - 32px);
+}
+
+
+/* =====================================================
    MARLEY
 ===================================================== */
 
@@ -701,7 +1111,7 @@ body {
 #marleyText {
 
     font-size:
-        clamp(30px, 8vw, 100px);
+        clamp(30px,8vw,100px);
 
     text-align: center;
 
@@ -753,15 +1163,25 @@ body {
 
 @media (max-width: 900px) {
 
+    body {
+        overflow: auto;
+    }
+
     #app {
 
-        grid-template-columns: 1fr 1fr;
+        position: relative;
+
+        min-height: 100vh;
+
+        grid-template-columns:
+            1fr 1fr;
 
         grid-template-rows:
             55px
-            1fr
-            1fr
-            180px;
+            350px
+            350px
+            300px
+            300px;
 
     }
 
@@ -784,14 +1204,19 @@ body {
         grid-row: 3;
     }
 
+    #mediaPanel {
+        grid-column: 1 / 3;
+        grid-row: 4;
+    }
+
     #matrixPanel {
         grid-column: 1;
-        grid-row: 4;
+        grid-row: 5;
     }
 
     #dirPanel {
         grid-column: 2;
-        grid-row: 4;
+        grid-row: 5;
     }
 
 }
@@ -803,132 +1228,192 @@ body {
 <body>
 
 
-<!-- =====================================================
-     CRT EFFECTS
-===================================================== -->
-
 <div id="crt">
 
-    <div id="app">
+<div id="app">
 
 
-        <!-- HEADER -->
+<!-- =====================================================
+     HEADER
+===================================================== -->
 
-        <div id="header">
+<div id="header">
 
-            <div id="title">
-                TERMINAL // NETWORK
-            </div>
+    <div id="title">
+        TERMINAL // NETWORK
+    </div>
 
-            <div id="connection">
-                OFFLINE
-            </div>
+    <div id="connection">
+        OFFLINE
+    </div>
 
-        </div>
-
-
-        <!-- TERMINAL -->
-
-        <div
-            id="terminalPanel"
-            class="panel">
-
-            <div class="panelTitle">
-                [ TERMINAL ]
-            </div>
-
-            <div id="terminalOutput"></div>
-
-            <div id="terminalInputLine">
-
-                <span id="terminalPrompt">
-                    guest@terminal:~$
-                </span>
-
-                <input
-                    id="terminalInput"
-                    autocomplete="off"
-                >
-
-            </div>
-
-        </div>
+</div>
 
 
-        <!-- CHAT -->
+<!-- =====================================================
+     TERMINAL
+===================================================== -->
 
-        <div
-            id="chatPanel"
-            class="panel">
+<div
+    id="terminalPanel"
+    class="panel">
 
-            <div class="panelTitle">
-                [ PROXIMITY CHAT ]
-            </div>
+    <div class="panelTitle">
+        [ TERMINAL ]
+    </div>
 
-            <div id="chatMessages"></div>
+    <div id="terminalOutput"></div>
 
-            <div id="chatInputLine">
+    <div id="terminalInputLine">
 
-                <input
-                    id="chatInput"
-                    placeholder="message..."
-                    autocomplete="off"
-                >
+        <span id="terminalPrompt">
+            guest@terminal:~$
+        </span>
 
-            </div>
-
-        </div>
-
-
-        <!-- USERS -->
-
-        <div
-            id="usersPanel"
-            class="panel">
-
-            <div class="panelTitle">
-                [ USERS ONLINE ]
-            </div>
-
-            <div id="usersList">
-                SYSTEM: 0 USERS
-            </div>
-
-        </div>
-
-
-        <!-- MATRIX -->
-
-        <div
-            id="matrixPanel"
-            class="panel">
-
-            <div class="panelTitle">
-                [ MATRIX ]
-            </div>
-
-            <canvas id="matrix"></canvas>
-
-        </div>
-
-
-        <!-- DIR -->
-
-        <div
-            id="dirPanel"
-            class="panel">
-
-            <div class="panelTitle">
-                [ DIR /S // LIVE ]
-            </div>
-
-            <div id="dirOutput"></div>
-
-        </div>
-
+        <input
+            id="terminalInput"
+            autocomplete="off"
+        >
 
     </div>
 
+</div>
+
+
+<!-- =====================================================
+     CHAT
+===================================================== -->
+
+<div
+    id="chatPanel"
+    class="panel">
+
+    <div class="panelTitle">
+        [ PROXIMITY CHAT ]
+    </div>
+
+    <div id="chatMessages"></div>
+
+    <div id="chatInputLine">
+
+        <input
+            id="chatInput"
+            placeholder="message..."
+            autocomplete="off"
+        >
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     USERS
+===================================================== -->
+
+<div
+    id="usersPanel"
+    class="panel">
+
+    <div class="panelTitle">
+        [ USERS ONLINE ]
+    </div>
+
+    <div id="usersList">
+        SYSTEM: 0 USERS
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MEDIA
+===================================================== -->
+
+<div
+    id="mediaPanel"
+    class="panel">
+
+    <div class="panelTitle">
+        [ MEDIA // GITHUB ]
+    </div>
+
+    <div id="mediaContent">
+
+        <div id="mediaControls">
+
+            <input
+                type="file"
+                id="mediaFile"
+                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
+            >
+
+            <button
+                class="mediaButton"
+                id="uploadButton">
+                UPLOAD
+            </button>
+
+            <button
+                class="mediaButton"
+                id="refreshMedia">
+                REFRESH
+            </button>
+
+            <div id="mediaStatus">
+                READY.
+            </div>
+
+            <div id="mediaProgress">
+
+                <div id="mediaProgressBar"></div>
+
+            </div>
+
+        </div>
+
+        <div id="mediaList"></div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     DIR
+===================================================== -->
+
+<div
+    id="dirPanel"
+    class="panel">
+
+    <div class="panelTitle">
+        [ DIR /S // LIVE ]
+    </div>
+
+    <div id="dirOutput"></div>
+
+</div>
+
+
+<!-- =====================================================
+     MATRIX
+===================================================== -->
+
+<div
+    id="matrixPanel"
+    class="panel">
+
+    <div class="panelTitle">
+        [ MATRIX ]
+    </div>
+
+    <canvas id="matrix"></canvas>
+
+</div>
+
+
+</div>
 </div>
 
 
@@ -957,10 +1442,6 @@ INITIALIZING SYSTEM...
 </div>
 
 
-<!-- =====================================================
-     VHS
-===================================================== -->
-
 <div id="scanlines"></div>
 
 <div id="vhs"></div>
@@ -976,6 +1457,27 @@ INITIALIZING SYSTEM...
 
     <div id="marleyText">
         ❤️ I LOVE YOU MARLEY ❤️
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MEDIA LIGHTBOX
+===================================================== -->
+
+<div id="mediaLightbox">
+
+    <div id="mediaLightboxContent">
+
+        <button id="mediaLightboxClose">
+            ✕
+        </button>
+
+        <div id="mediaLightboxViewer"></div>
+
+        <div id="mediaLightboxName"></div>
+
     </div>
 
 </div>
@@ -1012,6 +1514,9 @@ let dirIndex = 0;
 /* =====================================================
    ELEMENTS
 ===================================================== */
+
+const mediaList =
+    document.getElementById("mediaList");
 
 const boot =
     document.getElementById("boot");
@@ -1052,9 +1557,27 @@ const connection =
 const dirOutput =
     document.getElementById("dirOutput");
 
+const mediaFile =
+    document.getElementById("mediaFile");
+
+const uploadButton =
+    document.getElementById("uploadButton");
+
+const refreshMedia =
+    document.getElementById("refreshMedia");
+
+const mediaStatus =
+    document.getElementById("mediaStatus");
+
+const mediaProgress =
+    document.getElementById("mediaProgress");
+
+const mediaProgressBar =
+    document.getElementById("mediaProgressBar");
+
 
 /* =====================================================
-   BOOT ANIMATION
+   BOOT
 ===================================================== */
 
 async function bootAnimation() {
@@ -1062,18 +1585,31 @@ async function bootAnimation() {
     const steps = [
 
         "BOOTING...",
+
         "CHECKING MEMORY...",
+
         "LOADING TERMINAL...",
+
         "LOADING CHAT...",
+
+        "LOADING MEDIA SYSTEM...",
+
         "LOADING MATRIX...",
+
         "LOADING FILE SYSTEM...",
+
         "INITIALIZING NETWORK...",
+
         "READY."
 
     ];
 
 
-    for (let i = 0; i <= 100; i++) {
+    for (
+        let i = 0;
+        i <= 100;
+        i++
+    ) {
 
         bootProgress.style.width =
             i + "%";
@@ -1087,9 +1623,7 @@ async function bootAnimation() {
         ) {
 
             const index =
-                Math.floor(
-                    i / 12
-                );
+                Math.floor(i / 12);
 
             bootText.textContent =
                 steps[
@@ -1133,12 +1667,15 @@ async function bootAnimation() {
 
     startInfiniteDir();
 
+    loadMedia();
+
     connect();
+
 }
 
 
 /* =====================================================
-   TERMINAL PRINT
+   TERMINAL
 ===================================================== */
 
 function terminalPrint(text) {
@@ -1155,11 +1692,12 @@ function terminalPrint(text) {
 
     terminalOutput.scrollTop =
         terminalOutput.scrollHeight;
+
 }
 
 
 /* =====================================================
-   CHAT PRINT
+   CHAT
 ===================================================== */
 
 function chatPrint(
@@ -1182,6 +1720,7 @@ function chatPrint(
 
     chatMessages.scrollTop =
         chatMessages.scrollHeight;
+
 }
 
 
@@ -1190,12 +1729,6 @@ function chatPrint(
 ===================================================== */
 
 function connect() {
-
-    /*
-        Pour le premier test,
-        on demande le username
-        via une simple popup.
-    */
 
     username =
         prompt(
@@ -1214,7 +1747,7 @@ function connect() {
     username =
         username
             .replace(/[<>]/g, "")
-            .substring(0, 20);
+            .substring(0,20);
 
 
     terminalPrompt.textContent =
@@ -1251,7 +1784,8 @@ function connect() {
         socket.send(
             JSON.stringify({
 
-                type: "join",
+                type:
+                    "join",
 
                 username:
                     username
@@ -1283,8 +1817,6 @@ function connect() {
         }
 
 
-        /* SYSTEM */
-
         if (
             data.type ===
             "system"
@@ -1297,8 +1829,6 @@ function connect() {
 
         }
 
-
-        /* JOIN */
 
         if (
             data.type ===
@@ -1314,8 +1844,6 @@ function connect() {
         }
 
 
-        /* LEAVE */
-
         if (
             data.type ===
             "leave"
@@ -1330,8 +1858,6 @@ function connect() {
         }
 
 
-        /* CHAT */
-
         if (
             data.type ===
             "chat"
@@ -1345,8 +1871,6 @@ function connect() {
         }
 
 
-        /* USERS */
-
         if (
             data.type ===
             "users"
@@ -1356,14 +1880,10 @@ function connect() {
                 "SYSTEM: " +
                 data.users.length +
                 " USERS\n\n" +
-                data.users.join(
-                    "\n"
-                );
+                data.users.join("\n");
 
         }
 
-
-        /* MARLEY */
 
         if (
             data.type ===
@@ -1377,6 +1897,25 @@ function connect() {
             );
 
             marleyAnimation();
+
+        }
+
+
+        /* NOUVEAU MEDIA */
+
+        if (
+            data.type ===
+            "media"
+        ) {
+
+            terminalPrint(
+                "[MEDIA] " +
+                data.username +
+                " a uploadé " +
+                data.name
+            );
+
+            addMedia(data);
 
         }
 
@@ -1413,6 +1952,9 @@ function connect() {
                 setTimeout(
                     () => {
 
+                        reconnectTimer =
+                            null;
+
                         terminalPrint(
                             "[SYSTEM] Reconnexion..."
                         );
@@ -1431,7 +1973,7 @@ function connect() {
 
 
 /* =====================================================
-   SEND CHAT
+   CHAT SEND
 ===================================================== */
 
 function sendChat(message) {
@@ -1450,7 +1992,8 @@ function sendChat(message) {
     socket.send(
         JSON.stringify({
 
-            type: "chat",
+            type:
+                "chat",
 
             message:
                 message
@@ -1482,8 +2025,6 @@ async function terminalCommand(
     );
 
 
-    /* DIR /S */
-
     if (
         lower ===
         "dir /s"
@@ -1497,21 +2038,14 @@ async function terminalCommand(
                     "/api/files"
                 );
 
-
             const files =
                 await response.json();
 
 
-            terminalPrint("");
-
             files.forEach(
                 file =>
-                    terminalPrint(
-                        file
-                    )
+                    terminalPrint(file)
             );
-
-            terminalPrint("");
 
         } catch {
 
@@ -1522,10 +2056,25 @@ async function terminalCommand(
         }
 
         return;
+
     }
 
 
-    /* CLEAR */
+    if (
+        lower ===
+        "media"
+    ) {
+
+        loadMedia();
+
+        terminalPrint(
+            "[MEDIA] Liste actualisée."
+        );
+
+        return;
+
+    }
+
 
     if (
         lower ===
@@ -1536,10 +2085,9 @@ async function terminalCommand(
             "";
 
         return;
+
     }
 
-
-    /* HELP */
 
     if (
         lower ===
@@ -1555,6 +2103,10 @@ async function terminalCommand(
         );
 
         terminalPrint(
+            "media"
+        );
+
+        terminalPrint(
             "clear"
         );
 
@@ -1567,10 +2119,9 @@ async function terminalCommand(
         );
 
         return;
+
     }
 
-
-    /* EASTER EGG */
 
     if (
         lower
@@ -1582,20 +2133,15 @@ async function terminalCommand(
         "i love you marley"
     ) {
 
-        sendChat(
-            command
-        );
+        sendChat(command);
 
         return;
+
     }
 
 
-    /* CHAT COMMAND */
-
     if (
-        lower.startsWith(
-            "chat "
-        )
+        lower.startsWith("chat ")
     ) {
 
         sendChat(
@@ -1603,20 +2149,17 @@ async function terminalCommand(
         );
 
         return;
+
     }
 
 
-    /* NORMAL MESSAGE */
-
-    sendChat(
-        command
-    );
+    sendChat(command);
 
 }
 
 
 /* =====================================================
-   TERMINAL INPUT
+   INPUTS
 ===================================================== */
 
 terminalInput.addEventListener(
@@ -1624,78 +2167,759 @@ terminalInput.addEventListener(
     event => {
 
         if (
-            event.key !==
-            "Enter"
-        ) {
-
+            event.key !== "Enter"
+        )
             return;
-
-        }
 
 
         const command =
             terminalInput.value.trim();
 
 
-        terminalInput.value =
-            "";
+        terminalInput.value = "";
 
 
-        if (
-            !command
-        ) {
-
-            return;
-
-        }
-
-
-        terminalCommand(
-            command
-        );
+        if (command)
+            terminalCommand(command);
 
     }
 );
 
-
-/* =====================================================
-   CHAT INPUT
-===================================================== */
 
 chatInput.addEventListener(
     "keydown",
     event => {
 
         if (
-            event.key !==
-            "Enter"
-        ) {
-
+            event.key !== "Enter"
+        )
             return;
-
-        }
 
 
         const message =
             chatInput.value.trim();
 
 
-        chatInput.value =
+        chatInput.value = "";
+
+
+        if (message)
+            sendChat(message);
+
+    }
+);
+
+
+/* =====================================================
+   MEDIA HELPERS
+===================================================== */
+
+function formatSize(bytes) {
+
+    if (bytes < 1024)
+        return bytes + " B";
+
+    if (bytes < 1024 * 1024)
+        return (
+            (bytes / 1024).toFixed(1)
+            + " KB"
+        );
+
+    return (
+        (bytes / 1024 / 1024).toFixed(2)
+        + " MB"
+    );
+
+}
+
+
+function isVideo(file) {
+
+    const name =
+        file.name.toLowerCase();
+
+    return (
+        name.endsWith(".mp4") ||
+        name.endsWith(".webm") ||
+        name.endsWith(".mov")
+    );
+
+}
+
+
+/* =====================================================
+   MEDIA LIGHTBOX
+===================================================== */
+
+const mediaLightbox =
+    document.getElementById(
+        "mediaLightbox"
+    );
+
+const mediaLightboxContent =
+    document.getElementById(
+        "mediaLightboxContent"
+    );
+
+const mediaLightboxViewer =
+    document.getElementById(
+        "mediaLightboxViewer"
+    );
+
+const mediaLightboxClose =
+    document.getElementById(
+        "mediaLightboxClose"
+    );
+
+const mediaLightboxName =
+    document.getElementById(
+        "mediaLightboxName"
+    );
+
+
+/* =====================================================
+   OPEN LIGHTBOX
+===================================================== */
+
+function openMediaLightbox(file) {
+
+    mediaLightboxViewer.innerHTML =
+        "";
+
+    mediaLightboxName.textContent =
+        file.name || "MEDIA";
+
+
+    let viewer;
+
+
+    if (isVideo(file)) {
+
+        viewer =
+            document.createElement(
+                "video"
+            );
+
+        viewer.controls =
+            true;
+
+        viewer.autoplay =
+            true;
+
+        viewer.loop =
+            false;
+
+        viewer.playsInline =
+            true;
+
+    } else {
+
+        viewer =
+            document.createElement(
+                "img"
+            );
+
+        viewer.alt =
+            file.name || "MEDIA";
+
+    }
+
+
+    viewer.src =
+        file.url;
+
+
+    mediaLightboxViewer.appendChild(
+        viewer
+    );
+
+
+    mediaLightbox.style.display =
+        "flex";
+
+
+    document.body.style.overflow =
+        "hidden";
+
+
+    if (isVideo(file)) {
+
+        viewer.play()
+            .catch(() => {});
+
+    }
+
+}
+
+
+/* =====================================================
+   CLOSE LIGHTBOX
+===================================================== */
+
+function closeMediaLightbox() {
+
+    const video =
+        mediaLightboxViewer.querySelector(
+            "video"
+        );
+
+
+    if (video) {
+
+        video.pause();
+
+        video.removeAttribute(
+            "src"
+        );
+
+        video.load();
+
+    }
+
+
+    mediaLightboxViewer.innerHTML =
+        "";
+
+
+    mediaLightbox.style.display =
+        "none";
+
+
+    document.body.style.overflow =
+        "";
+
+}
+
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
+mediaLightboxClose.addEventListener(
+    "click",
+    closeMediaLightbox
+);
+
+
+/* =====================================================
+   CLICK OUTSIDE
+===================================================== */
+
+mediaLightbox.addEventListener(
+    "click",
+    event => {
+
+        if (
+            event.target ===
+            mediaLightbox
+        ) {
+
+            closeMediaLightbox();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   ESCAPE
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape" &&
+            mediaLightbox.style.display ===
+            "flex"
+        ) {
+
+            closeMediaLightbox();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   MEDIA DISPLAY
+===================================================== */
+
+function addMedia(file) {
+
+    const mediaPath =
+        file.path ||
+        file.name;
+
+
+    if (
+        document.querySelector(
+            `[data-media-path="${CSS.escape(mediaPath)}"]`
+        )
+    ) {
+        return;
+    }
+
+
+    const item =
+        document.createElement("div");
+
+    item.className =
+        "mediaItem";
+
+    item.dataset.mediaPath =
+        mediaPath;
+
+
+    let preview;
+
+
+    /* =========================
+       VIDEO MP4 / WEBM / MOV
+    ========================= */
+
+    if (isVideo(file)) {
+
+        preview =
+            document.createElement("video");
+
+        preview.className =
+            "mediaPreview";
+
+        preview.src =
+            file.url;
+
+        preview.controls =
+            true;
+
+        preview.preload =
+            "metadata";
+
+        preview.playsInline =
+            true;
+
+        preview.muted =
+            true;
+
+    }
+
+
+    /* =========================
+       IMAGE / GIF / WEBP
+    ========================= */
+
+    else {
+
+        preview =
+            document.createElement("img");
+
+        preview.className =
+            "mediaPreview";
+
+        preview.src =
+            file.url;
+
+        preview.alt =
+            file.name;
+
+    }
+
+
+    /* =========================
+       OPEN LIGHTBOX
+    ========================= */
+
+    preview.addEventListener(
+        "dblclick",
+        event => {
+
+            event.preventDefault();
+
+            openMediaLightbox(file);
+
+        }
+    );
+
+
+    preview.style.cursor =
+        "zoom-in";
+
+
+    /* =========================
+       NAME
+    ========================= */
+
+    const name =
+        document.createElement("div");
+
+    name.className =
+        "mediaName";
+
+    name.textContent =
+        file.name;
+
+
+    /* =========================
+       INFO
+    ========================= */
+
+    const info =
+        document.createElement("div");
+
+    info.className =
+        "mediaInfo";
+
+    info.textContent =
+        formatSize(
+            file.size || 0
+        );
+
+
+    /* =========================
+       OPEN LINK
+    ========================= */
+
+    const link =
+        document.createElement("a");
+
+    link.className =
+        "mediaOpen";
+
+    link.href =
+        file.url;
+
+    link.target =
+        "_blank";
+
+    link.rel =
+        "noopener";
+
+    link.textContent =
+        "[ OPEN ]";
+
+
+    /* =========================
+       APPEND
+    ========================= */
+
+    item.appendChild(
+        preview
+    );
+
+    item.appendChild(
+        name
+    );
+
+    item.appendChild(
+        info
+    );
+
+    item.appendChild(
+        link
+    );
+
+
+    mediaList.prepend(
+        item
+    );
+
+}
+
+/* =====================================================
+   LOAD MEDIA
+===================================================== */
+
+async function loadMedia() {
+
+    if (!mediaList) {
+        console.error("[MEDIA] mediaList introuvable.");
+        return;
+    }
+
+    try {
+
+        mediaStatus.textContent =
+            "LOADING MEDIA...";
+
+        const response =
+            await fetch(
+                API + "/api/media"
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " + response.status
+            );
+
+        }
+
+        const files =
+            await response.json();
+
+
+        mediaList.innerHTML =
             "";
 
 
-        if (
-            !message
-        ) {
+        if (!Array.isArray(files)) {
+
+            throw new Error(
+                "Réponse serveur invalide."
+            );
+
+        }
+
+
+        files.forEach(
+            file => {
+
+                addMedia(file);
+
+            }
+        );
+
+
+        mediaStatus.textContent =
+            "[OK] " +
+            files.length +
+            " MEDIA LOADED.";
+
+
+    } catch (error) {
+
+        console.error(
+            "[MEDIA] Erreur chargement :",
+            error
+        );
+
+        mediaStatus.textContent =
+            "[ERROR] MEDIA SYSTEM OFFLINE.";
+
+    }
+
+}
+
+/* =====================================================
+   UPLOAD
+===================================================== */
+
+uploadButton.addEventListener(
+    "click",
+    () => {
+
+        const file =
+            mediaFile.files[0];
+
+
+        if (!file) {
+
+            mediaStatus.textContent =
+                "[ERROR] SELECT A FILE.";
 
             return;
 
         }
 
 
-        sendChat(
-            message
+        const MAX =
+            25 * 1024 * 1024;
+
+
+        if (
+            file.size >
+            MAX
+        ) {
+
+            mediaStatus.textContent =
+                "[ERROR] MAXIMUM 25 MB.";
+
+            return;
+
+        }
+
+
+        const form =
+            new FormData();
+
+
+        form.append(
+            "file",
+            file
         );
+
+        form.append(
+            "username",
+            username
+        );
+
+
+        const xhr =
+            new XMLHttpRequest();
+
+
+        xhr.open(
+            "POST",
+            API + "/api/upload"
+        );
+
+
+        mediaProgress.style.display =
+            "block";
+
+        mediaProgressBar.style.width =
+            "0%";
+
+        uploadButton.disabled =
+            true;
+
+
+        mediaStatus.textContent =
+            "UPLOADING...";
+
+
+        xhr.upload.onprogress =
+            event => {
+
+                if (!event.lengthComputable)
+                    return;
+
+
+                const percent =
+                    Math.round(
+                        event.loaded /
+                        event.total *
+                        100
+                    );
+
+
+                mediaProgressBar.style.width =
+                    percent + "%";
+
+
+                mediaStatus.textContent =
+                    "UPLOADING... " +
+                    percent +
+                    "%";
+
+            };
+
+
+        xhr.onload =
+            () => {
+
+                uploadButton.disabled =
+                    false;
+
+
+                let data;
+
+                try {
+
+                    data =
+                        JSON.parse(
+                            xhr.responseText
+                        );
+
+                } catch {
+
+                    data = {};
+
+                }
+
+
+                if (
+                    xhr.status >= 200 &&
+                    xhr.status < 300 &&
+                    data.success
+                ) {
+
+                    mediaStatus.textContent =
+                        "[OK] UPLOAD COMPLETE.";
+
+
+                    addMedia({
+
+                        name:
+                            data.name,
+
+                        url:
+                            data.url,
+
+                        size:
+                            data.size,
+
+                        path:
+                            "uploaded/" +
+                            data.name
+
+                    });
+
+
+                    mediaFile.value =
+                        "";
+
+
+                } else {
+
+                    mediaStatus.textContent =
+                        "[ERROR] " +
+                        (
+                            data.error ||
+                            "UPLOAD FAILED."
+                        );
+
+                }
+
+            };
+
+
+        xhr.onerror =
+            () => {
+
+                uploadButton.disabled =
+                    false;
+
+                mediaStatus.textContent =
+                    "[ERROR] NETWORK ERROR.";
+
+            };
+
+
+        xhr.onloadend =
+            () => {
+
+                setTimeout(
+                    () => {
+
+                        mediaProgress.style.display =
+                            "none";
+
+                    },
+                    1000
+                );
+
+            };
+
+
+        xhr.send(form);
+
+    }
+);
+
+
+/* =====================================================
+   REFRESH
+===================================================== */
+
+refreshMedia.addEventListener(
+    "click",
+    () => {
+
+        loadMedia();
 
     }
 );
@@ -1742,9 +2966,7 @@ function startMatrix() {
         );
 
     const ctx =
-        canvas.getContext(
-            "2d"
-        );
+        canvas.getContext("2d");
 
 
     function resize() {
@@ -1760,6 +2982,7 @@ function startMatrix() {
 
     resize();
 
+
     window.addEventListener(
         "resize",
         resize
@@ -1767,10 +2990,12 @@ function startMatrix() {
 
 
     const chars =
-        "01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%アイウエオ";
+        "01#$%アイウエオ親愛なるプラウト愛してるよ、マーリー";
+
 
     const fontSize =
         12;
+
 
     let columns =
         Math.floor(
@@ -1785,72 +3010,69 @@ function startMatrix() {
         ).fill(1);
 
 
-    function draw() {
+    setInterval(
+        () => {
 
-        ctx.fillStyle =
-            "rgba(0,0,0,.08)";
+            ctx.fillStyle =
+                "rgba(0,0,0,.08)";
 
-        ctx.fillRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
-
-        ctx.fillStyle =
-            "#00ff66";
-
-        ctx.font =
-            fontSize +
-            "px monospace";
-
-
-        for (
-            let i = 0;
-            i < drops.length;
-            i++
-        ) {
-
-            const char =
-                chars[
-                    Math.floor(
-                        Math.random() *
-                        chars.length
-                    )
-                ];
-
-
-            ctx.fillText(
-                char,
-                i * fontSize,
-                drops[i] *
-                fontSize
+            ctx.fillRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
             );
 
 
-            if (
-                drops[i] *
-                fontSize >
-                canvas.height &&
-                Math.random() >
-                .975
+            ctx.fillStyle =
+                "#00ff66";
+
+            ctx.font =
+                fontSize +
+                "px monospace";
+
+
+            for (
+                let i = 0;
+                i < drops.length;
+                i++
             ) {
 
-                drops[i] = 0;
+                const char =
+                    chars[
+                        Math.floor(
+                            Math.random() *
+                            chars.length
+                        )
+                    ];
+
+
+                ctx.fillText(
+                    char,
+                    i * fontSize,
+                    drops[i] *
+                    fontSize
+                );
+
+
+                if (
+                    drops[i] *
+                    fontSize >
+                    canvas.height &&
+                    Math.random() >
+                    .975
+                ) {
+
+                    drops[i] = 0;
+
+                }
+
+
+                drops[i]++;
 
             }
 
-
-            drops[i]++;
-
-        }
-
-    }
-
-
-    setInterval(
-        draw,
+        },
         45
     );
 
@@ -1858,7 +3080,7 @@ function startMatrix() {
 
 
 /* =====================================================
-   INFINITE DIR /S
+   INFINITE DIR
 ===================================================== */
 
 async function loadDirFiles() {
@@ -1874,7 +3096,6 @@ async function loadDirFiles() {
 
         dirFiles =
             await response.json();
-
 
     } catch {
 
@@ -1897,22 +3118,15 @@ async function loadDirFiles() {
 }
 
 
-/* =====================================================
-   INFINITE FILE STREAM
-===================================================== */
-
 async function startInfiniteDir() {
 
     await loadDirFiles();
 
 
     if (
-        dirFiles.length === 0
-    ) {
-
+        !dirFiles.length
+    )
         return;
-
-    }
 
 
     setInterval(
@@ -1948,12 +3162,6 @@ async function startInfiniteDir() {
             );
 
 
-            /*
-                Supprime les anciennes lignes
-                pour éviter que la mémoire
-                augmente indéfiniment.
-            */
-
             while (
                 dirOutput.children.length >
                 35
@@ -1970,6 +3178,7 @@ async function startInfiniteDir() {
     );
 
 }
+
 
 
 /* =====================================================
