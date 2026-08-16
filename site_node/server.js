@@ -7,28 +7,134 @@ const server = http.createServer(app);
 
 const wss = new WebSocket.Server({ server });
 
+const users = new Map();
+
+const repoFiles = [
+    "site_node/",
+    "site_node/server.js",
+    "site_node/package.json",
+    "site_node/package-lock.json"
+];
+
 app.get("/", (req, res) => {
-    res.send("Serveur Beta 1 / Beta 2 opérationnel !");
+    res.send("Terminal server online.");
 });
 
-wss.on("connection", (socket) => {
-    console.log("Un client est connecté.");
+app.get("/api/files", (req, res) => {
+    res.json(repoFiles);
+});
 
-    socket.on("message", (message) => {
-        const text = message.toString();
+function broadcast(data) {
+    const message = JSON.stringify(data);
 
-        console.log("Message reçu :", text);
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+        }
+    });
+}
 
-        // Envoyer le message à tous les clients connectés
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(text);
+function sendUsers() {
+    broadcast({
+        type: "users",
+        users: [...users.values()].map(user => user.name)
+    });
+}
+
+wss.on("connection", socket => {
+
+    console.log("Nouvelle connexion");
+
+    socket.on("message", raw => {
+
+        let data;
+
+        try {
+            data = JSON.parse(raw.toString());
+        } catch {
+            return;
+        }
+
+        // Connexion utilisateur
+        if (data.type === "join") {
+
+            const username =
+                String(data.username || "anonymous")
+                .replace(/[<>]/g, "")
+                .substring(0, 20);
+
+            users.set(socket, {
+                name: username
+            });
+
+            socket.send(JSON.stringify({
+                type: "system",
+                message: `Bienvenue ${username}.`
+            }));
+
+            broadcast({
+                type: "join",
+                username: username
+            });
+
+            sendUsers();
+
+            return;
+        }
+
+        // Message du chat
+        if (data.type === "chat") {
+
+            const user = users.get(socket);
+
+            if (!user) return;
+
+            const message =
+                String(data.message || "")
+                .replace(/[<>]/g, "")
+                .substring(0, 300);
+
+            if (!message) return;
+
+            // Easter egg
+            if (
+                message
+                .trim()
+                .toLowerCase()
+                .replace(/[.!?]+$/g, "") === "i love you marley"
+            ) {
+                broadcast({
+                    type: "marley",
+                    username: user.name
+                });
+
+                return;
             }
-        });
+
+            broadcast({
+                type: "chat",
+                username: user.name,
+                message: message
+            });
+        }
     });
 
     socket.on("close", () => {
-        console.log("Un client s'est déconnecté.");
+
+        const user = users.get(socket);
+
+        if (user) {
+
+            broadcast({
+                type: "leave",
+                username: user.name
+            });
+
+            users.delete(socket);
+            sendUsers();
+        }
+
+        console.log("Connexion fermée");
     });
 });
 
