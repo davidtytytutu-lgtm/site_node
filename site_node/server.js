@@ -44,7 +44,7 @@ const GITHUB_REPO =
 const GITHUB_BRANCH =
     process.env.GITHUB_BRANCH || "main";
 
-const MEDIA_FOLDER = "media";
+const MEDIA_FOLDER = "site_node/media";
 
 
 /* =====================================================
