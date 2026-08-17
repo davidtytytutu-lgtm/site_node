@@ -3661,51 +3661,21 @@ function connect() {
         );
 
 
-        /* HEARTBEAT UNIQUE */
+       /* =================================================
+   SERVER WEBSOCKET HEARTBEAT
+   Le serveur gère déjà ping/pong.
+================================================= */
 
-        if (heartbeatTimer) {
+if (heartbeatTimer) {
 
-            clearInterval(
-                heartbeatTimer
-            );
-        }
+    clearInterval(
+        heartbeatTimer
+    );
 
+    heartbeatTimer =
+        null;
 
-        heartbeatTimer =
-            setInterval(
-                () => {
-
-                    if (
-                        socket &&
-                        socket.readyState ===
-                            WebSocket.OPEN
-                    ) {
-
-                        try {
-
-                            socket.send(
-                                JSON.stringify({
-
-                                    type:
-                                        "ping"
-
-                                })
-                            );
-
-                        } catch (error) {
-
-                            console.error(
-                                "[HEARTBEAT]",
-                                error
-                            );
-                        }
-
-                    }
-
-                },
-                30000
-            );
-
+}
 
         terminalInput.focus();
     };
@@ -3789,7 +3759,39 @@ function connect() {
              );
             }
 
+/* =================================================
+   CHAT HISTORY
+================================================= */
 
+if (
+    data.type ===
+    "chatHistory"
+) {
+
+    if (
+        Array.isArray(
+            data.messages
+        )
+    ) {
+
+        chatMessages.innerHTML =
+            "";
+
+        data.messages.forEach(
+            message => {
+
+                chatPrint(
+                    message.username,
+                    message.message,
+                    message.avatar
+                );
+
+            }
+        );
+
+    }
+
+}
             if (
     data.type ===
     "users"
