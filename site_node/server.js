@@ -304,6 +304,421 @@ const users =
 
 
 /* =====================================================
+   WINAMP STATE
+===================================================== */
+
+/*
+    État global du lecteur Winamp.
+
+    Tous les clients connectés reçoivent cet état.
+
+    Le serveur ne joue PAS la musique.
+    Il sert uniquement à synchroniser
+    les lecteurs entre les clients.
+*/
+
+const winampState = {
+
+    playing:
+        false,
+
+    title:
+        "",
+
+    artist:
+        "",
+
+    album:
+        "",
+
+    cover:
+        "",
+
+    duration:
+        0,
+
+    position:
+        0,
+
+    volume:
+        100,
+
+    shuffle:
+        false,
+
+    repeat:
+        false,
+
+    playlist:
+        [],
+
+    currentIndex:
+        -1,
+
+    updatedAt:
+        Date.now(),
+
+    updatedBy:
+        null
+
+};
+
+
+/* =====================================================
+   WINAMP HELPERS
+===================================================== */
+
+function cleanWinampString(
+    value,
+    maxLength = 500
+) {
+
+    return String(
+        value ?? ""
+    )
+        .replace(
+            /[<>]/g,
+            ""
+        )
+        .substring(
+            0,
+            maxLength
+        );
+
+}
+
+
+function cleanWinampNumber(
+    value,
+    fallback = 0,
+    min = 0,
+    max = Number.MAX_SAFE_INTEGER
+) {
+
+    const number =
+        Number(value);
+
+    if (
+        !Number.isFinite(
+            number
+        )
+    ) {
+
+        return fallback;
+
+    }
+
+    return Math.min(
+        max,
+        Math.max(
+            min,
+            number
+        )
+    );
+
+}
+
+
+function getWinampState() {
+
+    return {
+
+        ...winampState,
+
+        playlist:
+            Array.isArray(
+                winampState.playlist
+            )
+                ? winampState.playlist
+                : []
+
+    };
+
+}
+
+
+function sendWinampState(
+    socket
+) {
+
+    if (
+        !socket ||
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+
+        return;
+
+    }
+
+    socket.send(
+        JSON.stringify({
+
+            type:
+                "winampState",
+
+            state:
+                getWinampState()
+
+        })
+    );
+
+}
+
+
+function broadcastWinamp(
+    except = null
+) {
+
+    broadcast({
+
+        type:
+            "winampState",
+
+        state:
+            getWinampState()
+
+    }, except);
+
+}
+
+
+/*
+ * Met à jour l'état du lecteur.
+ */
+function updateWinampState(
+    data,
+    username = null
+) {
+
+    if (
+        typeof data !== "object" ||
+        !data
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        typeof data.playing ===
+        "boolean"
+    ) {
+
+        winampState.playing =
+            data.playing;
+
+    }
+
+
+    if (
+        data.title !== undefined
+    ) {
+
+        winampState.title =
+            cleanWinampString(
+                data.title,
+                300
+            );
+
+    }
+
+
+    if (
+        data.artist !== undefined
+    ) {
+
+        winampState.artist =
+            cleanWinampString(
+                data.artist,
+                300
+            );
+
+    }
+
+
+    if (
+        data.album !== undefined
+    ) {
+
+        winampState.album =
+            cleanWinampString(
+                data.album,
+                300
+            );
+
+    }
+
+
+    if (
+        data.cover !== undefined
+    ) {
+
+        winampState.cover =
+            cleanWinampString(
+                data.cover,
+                1000
+            );
+
+    }
+
+
+    if (
+        data.duration !== undefined
+    ) {
+
+        winampState.duration =
+            cleanWinampNumber(
+                data.duration,
+                winampState.duration,
+                0
+            );
+
+    }
+
+
+    if (
+        data.position !== undefined
+    ) {
+
+        winampState.position =
+            cleanWinampNumber(
+                data.position,
+                winampState.position,
+                0,
+                winampState.duration || Number.MAX_SAFE_INTEGER
+            );
+
+    }
+
+
+    if (
+        data.volume !== undefined
+    ) {
+
+        winampState.volume =
+            cleanWinampNumber(
+                data.volume,
+                winampState.volume,
+                0,
+                100
+            );
+
+    }
+
+
+    if (
+        typeof data.shuffle ===
+        "boolean"
+    ) {
+
+        winampState.shuffle =
+            data.shuffle;
+
+    }
+
+
+    if (
+        typeof data.repeat ===
+        "boolean"
+    ) {
+
+        winampState.repeat =
+            data.repeat;
+
+    }
+
+
+    if (
+        Array.isArray(
+            data.playlist
+        )
+    ) {
+
+        winampState.playlist =
+            data.playlist
+                .slice(
+                    0,
+                    1000
+                )
+                .map(
+                    track => ({
+
+                        title:
+                            cleanWinampString(
+                                track?.title,
+                                300
+                            ),
+
+                        artist:
+                            cleanWinampString(
+                                track?.artist,
+                                300
+                            ),
+
+                        album:
+                            cleanWinampString(
+                                track?.album,
+                                300
+                            ),
+
+                        cover:
+                            cleanWinampString(
+                                track?.cover,
+                                1000
+                            ),
+
+                        url:
+                            cleanWinampString(
+                                track?.url,
+                                2000
+                            ),
+
+                        duration:
+                            cleanWinampNumber(
+                                track?.duration,
+                                0,
+                                0
+
+                            )
+
+                    })
+                );
+
+    }
+
+
+    if (
+        data.currentIndex !== undefined
+    ) {
+
+        winampState.currentIndex =
+            Math.floor(
+                cleanWinampNumber(
+                    data.currentIndex,
+                    winampState.currentIndex,
+                    -1,
+                    Math.max(
+                        -1,
+                        winampState.playlist.length - 1
+                    )
+                )
+            );
+
+    }
+
+
+    winampState.updatedAt =
+        Date.now();
+
+    winampState.updatedBy =
+        username || null;
+
+}
+
+
+/* =====================================================
    DATABASE INITIALIZATION
 ===================================================== */
 
@@ -1142,12 +1557,6 @@ app.put(
                 result.rows[0].avatar_url;
 
 
-            /*
-             * Mise à jour de l'avatar
-             * pour les connexions WebSocket
-             * déjà ouvertes.
-             */
-
             for (
                 const [
                     ws,
@@ -1246,6 +1655,83 @@ app.get(
         res.send(
             "David Terminal Server online."
         );
+
+    }
+);
+
+
+/* =====================================================
+   WINAMP API
+===================================================== */
+
+/*
+ * Permet au site de récupérer l'état actuel
+ * même sans attendre le WebSocket.
+ */
+
+app.get(
+    "/api/winamp",
+    (req, res) => {
+
+        res.json(
+            getWinampState()
+        );
+
+    }
+);
+
+
+/*
+ * Cette route permet éventuellement à un
+ * autre programme de mettre à jour Winamp.
+ *
+ * Authentification obligatoire.
+ */
+
+app.post(
+    "/api/winamp",
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            updateWinampState(
+                req.body,
+                req.session.username
+            );
+
+
+            broadcastWinamp();
+
+
+            res.json({
+
+                success:
+                    true,
+
+                state:
+                    getWinampState()
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "WINAMP API:",
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    "Impossible de mettre à jour Winamp."
+
+            });
+
+        }
 
     }
 );
@@ -1944,10 +2430,6 @@ app.get(
 );
 
 
-/* =====================================================
-   CHAT HISTORY ALIAS
-===================================================== */
-
 app.get(
     "/api/chat/history",
     (req, res) => {
@@ -1989,9 +2471,20 @@ function broadcast(
 
             ) {
 
-                client.send(
-                    message
-                );
+                try {
+
+                    client.send(
+                        message
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Broadcast:",
+                        error.message
+                    );
+
+                }
 
             }
 
@@ -2135,7 +2628,7 @@ wss.on(
 
 
         /* =================================================
-           HISTORIQUE
+           HISTORIQUE CHAT
         ================================================= */
 
         socket.send(
@@ -2150,6 +2643,15 @@ wss.on(
                     )
 
             })
+        );
+
+
+        /* =================================================
+           WINAMP : ÉTAT ACTUEL
+        ================================================= */
+
+        sendWinampState(
+            socket
         );
 
 
@@ -2199,16 +2701,6 @@ wss.on(
                 }
 
 
-                if (
-                    data.type !==
-                    "chat"
-                ) {
-
-                    return;
-
-                }
-
-
                 const currentUser =
                     users.get(
                         socket
@@ -2217,6 +2709,118 @@ wss.on(
 
                 if (
                     !currentUser
+                ) {
+
+                    return;
+
+                }
+
+
+                /* =================================================
+                   WINAMP
+                ================================================= */
+
+                if (
+                    data.type ===
+                    "winamp"
+                ) {
+
+                    /*
+                     * On accepte :
+                     *
+                     * {
+                     *   type: "winamp",
+                     *   state: {...}
+                     * }
+                     *
+                     * ou directement :
+                     *
+                     * {
+                     *   type: "winamp",
+                     *   playing: true,
+                     *   title: "..."
+                     * }
+                     */
+
+                    const winampData =
+                        data.state &&
+                        typeof data.state ===
+                        "object"
+                            ? data.state
+                            : data;
+
+
+                    updateWinampState(
+
+                        winampData,
+
+                        currentUser.name
+
+                    );
+
+
+                    /*
+                     * On renvoie l'état
+                     * à tous les clients.
+                     */
+
+                    broadcastWinamp();
+
+
+                    return;
+
+                }
+
+
+                /* =================================================
+                   WINAMP ACTION
+                ================================================= */
+
+                if (
+                    data.type ===
+                    "winampAction"
+                ) {
+
+                    const action =
+                        cleanWinampString(
+                            data.action,
+                            50
+                        );
+
+
+                    /*
+                     * Le serveur transmet l'action.
+                     *
+                     * Le lecteur HTML peut alors
+                     * effectuer l'action localement.
+                     */
+
+                    broadcast({
+
+                        type:
+                            "winampAction",
+
+                        action:
+                            action,
+
+                        username:
+                            currentUser.name
+
+                    });
+
+
+                    return;
+
+                }
+
+
+                /* =================================================
+                   CHAT
+                ================================================= */
+
+                if (
+                    data.type !==
+                    "chat"
                 ) {
 
                     return;
@@ -2401,6 +3005,90 @@ wss.on(
 
 
 /* =====================================================
+   WINAMP POSITION SYNC
+===================================================== */
+
+/*
+ * Pendant la lecture, le serveur fait avancer
+ * légèrement la position.
+ *
+ * Cela évite que les clients restent bloqués
+ * sur la même position entre deux mises à jour.
+ */
+
+setInterval(
+    () => {
+
+        if (
+            !winampState.playing
+        ) {
+
+            return;
+
+        }
+
+
+        const now =
+            Date.now();
+
+
+        if (
+            winampState.updatedAt
+        ) {
+
+            const elapsed =
+                (
+                    now -
+                    winampState.updatedAt
+                ) / 1000;
+
+
+            /*
+             * On ne fait avancer que si
+             * la dernière synchronisation
+             * est raisonnable.
+             */
+
+            if (
+                elapsed > 0 &&
+                elapsed < 10
+            ) {
+
+                winampState.position +=
+                    elapsed;
+
+            }
+
+        }
+
+
+        winampState.updatedAt =
+            now;
+
+
+        if (
+            winampState.duration > 0 &&
+            winampState.position >=
+            winampState.duration
+        ) {
+
+            winampState.position =
+                winampState.duration;
+
+            winampState.playing =
+                false;
+
+        }
+
+
+        broadcastWinamp();
+
+    },
+    5000
+);
+
+
+/* =====================================================
    WEBSOCKET KEEP ALIVE
 ===================================================== */
 
@@ -2563,6 +3251,11 @@ async function startServer() {
 
                 console.log(
                     "Sessions PostgreSQL activées."
+                );
+
+
+                console.log(
+                    "Winamp WebSocket activé."
                 );
 
             }
