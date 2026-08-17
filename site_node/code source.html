@@ -427,12 +427,13 @@ body.discoMode #crt {
         1fr
         1fr;
 
-    grid-template-rows:
-        55px
-        auto
-        350px
-        500px
-        180px;
+grid-template-rows:
+    55px
+    auto
+    350px
+    500px
+    500px
+    500px;
 }
 
 
@@ -1249,9 +1250,8 @@ body.discoMode #crt {
 
     grid-column: 3;
 
-    grid-row: 5;
+    grid-row: 6;
 }
-
 
 #dirOutput {
 
@@ -1305,7 +1305,7 @@ body.discoMode #crt {
 
     grid-column: 1 / 3;
 
-    grid-row: 5;
+    grid-row: 6;
 }
 
 
@@ -1573,7 +1573,421 @@ body.discoMode #crt {
     opacity: .8;
 }
 
+/* =====================================================
+   WINAMP
+===================================================== */
 
+/* =====================================================
+   WINAMP
+===================================================== */
+
+#winampPanel {
+
+    grid-column: 1 / 4;
+
+    grid-row: 5;
+
+    min-width: 0;
+
+    min-height: 0;
+
+    height: 500px;
+}
+
+
+#winampContent {
+
+    position: absolute;
+
+    top: 32px;
+
+    left: 0;
+
+    right: 0;
+
+    bottom: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    padding: 10px;
+
+    overflow: hidden;
+
+    min-height: 0;
+}
+
+
+/* =====================================================
+   DISPLAY
+===================================================== */
+
+#winampDisplay {
+
+    border:
+        1px solid #00ff66;
+
+    background:
+        #001a08;
+
+    padding: 10px;
+
+    box-shadow:
+        inset 0 0 15px rgba(0,255,102,.08);
+}
+
+
+#winampStatus {
+
+    font-size: 10px;
+
+    opacity: .7;
+
+    margin-bottom: 5px;
+}
+
+
+#winampTrackName {
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+    text-align: center;
+}
+
+
+/* =====================================================
+   PROGRESSION
+===================================================== */
+
+#winampProgressContainer {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    font-size: 10px;
+}
+
+
+#winampProgress {
+
+    flex: 1;
+
+    min-width: 0;
+
+    accent-color: #00ff66;
+
+    cursor: pointer;
+}
+
+
+#winampCurrentTime,
+#winampDuration {
+
+    width: 42px;
+
+    text-align: center;
+}
+
+
+/* =====================================================
+   CONTROLES
+===================================================== */
+
+#winampControls {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
+    flex-wrap: wrap;
+}
+
+
+.winampButton {
+
+    min-width: 45px;
+
+    height: 30px;
+
+    background:
+        #001a08;
+
+    color:
+        #00ff66;
+
+    border:
+        1px solid #00ff66;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    cursor: pointer;
+
+    font-weight: bold;
+}
+
+
+.winampButton:hover {
+
+    background:
+        #00ff66;
+
+    color:
+        #001a08;
+
+    box-shadow:
+        0 0 10px rgba(0,255,102,.5);
+}
+
+
+.winampButton:active {
+
+    transform:
+        translateY(1px);
+}
+
+
+/* =====================================================
+   VOLUME
+===================================================== */
+
+#winampVolumeLine {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    font-size: 11px;
+}
+
+
+#winampVolume {
+
+    width: 180px;
+
+    accent-color:
+        #00ff66;
+
+    cursor: pointer;
+}
+
+
+#winampVolumeValue {
+
+    width: 40px;
+
+    text-align: right;
+}
+
+
+/* =====================================================
+   FILE
+===================================================== */
+
+#winampFileLine {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 5px;
+
+    border-top:
+        1px solid rgba(0,255,102,.2);
+
+    border-bottom:
+        1px solid rgba(0,255,102,.2);
+}
+
+
+#winampFile {
+
+    max-width: 100%;
+
+    color:
+        #00ff66;
+
+    font-family:
+        "Courier New",
+        monospace;
+}
+
+
+/* =====================================================
+   PLAYLIST
+===================================================== */
+
+#winampPlaylist {
+
+    flex: 1;
+
+    min-height: 0;
+
+    border:
+        1px solid rgba(0,255,102,.5);
+
+    background:
+        rgba(0,10,4,.7);
+
+    overflow: hidden;
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+#winampPlaylistTitle {
+
+    height: 28px;
+
+    min-height: 28px;
+
+    display: flex;
+
+    align-items: center;
+
+    padding-left: 8px;
+
+    border-bottom:
+        1px solid rgba(0,255,102,.4);
+
+    background:
+        rgba(0,255,102,.06);
+
+    font-size: 11px;
+
+    font-weight: bold;
+}
+
+
+#winampPlaylistItems {
+
+    flex: 1;
+
+    min-height: 0;
+
+    overflow-y: auto;
+
+    padding: 5px;
+}
+
+
+/* =====================================================
+   PLAYLIST ITEM
+===================================================== */
+
+.winampPlaylistItem {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 7px;
+
+    margin-bottom: 3px;
+
+    border:
+        1px solid transparent;
+
+    cursor: pointer;
+
+    font-size: 11px;
+
+    overflow: hidden;
+}
+
+
+.winampPlaylistItem:hover {
+
+    background:
+        rgba(0,255,102,.08);
+
+    border:
+        1px solid rgba(0,255,102,.3);
+}
+
+
+.winampPlaylistItem.active {
+
+    background:
+        rgba(0,255,102,.15);
+
+    border:
+        1px solid #00ff66;
+
+    box-shadow:
+        inset 0 0 8px rgba(0,255,102,.08);
+}
+
+
+.winampPlaylistNumber {
+
+    width: 25px;
+
+    min-width: 25px;
+
+    opacity: .6;
+
+    text-align: right;
+}
+
+
+.winampPlaylistName {
+
+    flex: 1;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+
+/* =====================================================
+   EMPTY PLAYLIST
+===================================================== */
+
+#winampPlaylistEmpty {
+
+    padding: 20px;
+
+    text-align: center;
+
+    opacity: .5;
+
+    font-size: 11px;
+}
 /* =====================================================
    MOBILE
 ===================================================== */
@@ -2015,6 +2429,165 @@ body.discoMode #crt {
 
 </div>
 
+<!-- =====================================================
+     WINAMP
+===================================================== -->
+
+<div
+    id="winampPanel"
+    class="panel"
+>
+
+    <div class="panelTitle">
+        [ WINAMP // AUDIO PLAYER ]
+    </div>
+
+    <div id="winampContent">
+
+        <!-- TOP -->
+        <div id="winampTop">
+
+            <div id="winampDisplay">
+
+                <div id="winampStatus">
+                    WINAMP // READY
+                </div>
+
+                <div id="winampTrackName">
+                    NO TRACK
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PROGRESSION -->
+        <div id="winampProgressContainer">
+
+            <span id="winampCurrentTime">
+                00:00
+            </span>
+
+            <input
+                type="range"
+                id="winampProgress"
+                min="0"
+                max="100"
+                value="0"
+                step="0.1"
+            >
+
+            <span id="winampDuration">
+                00:00
+            </span>
+
+        </div>
+
+
+        <!-- CONTROLES -->
+        <div id="winampControls">
+
+            <button
+                class="winampButton"
+                id="winampPrevious"
+                title="Previous"
+            >
+                |◀
+            </button>
+
+            <button
+                class="winampButton"
+                id="winampPlay"
+                title="Play"
+            >
+                ▶
+            </button>
+
+            <button
+                class="winampButton"
+                id="winampPause"
+                title="Pause"
+            >
+                ❚❚
+            </button>
+
+            <button
+                class="winampButton"
+                id="winampStop"
+                title="Stop"
+            >
+                ■
+            </button>
+
+            <button
+                class="winampButton"
+                id="winampNext"
+                title="Next"
+            >
+                ▶|
+            </button>
+
+        </div>
+
+
+        <!-- VOLUME -->
+        <div id="winampVolumeLine">
+
+            <span>
+                VOL
+            </span>
+
+            <input
+                type="range"
+                id="winampVolume"
+                min="0"
+                max="1"
+                step="0.01"
+                value="1"
+            >
+
+            <span id="winampVolumeValue">
+                100%
+            </span>
+
+        </div>
+
+
+        <!-- FICHIER -->
+        <div id="winampFileLine">
+
+            <input
+                type="file"
+                id="winampFile"
+                accept="audio/*"
+                multiple
+            >
+
+        </div>
+
+
+        <!-- PLAYLIST -->
+        <div id="winampPlaylist">
+
+            <div id="winampPlaylistTitle">
+                [ PLAYLIST ]
+            </div>
+
+            <div id="winampPlaylistItems"></div>
+
+        </div>
+
+
+        <!-- AUDIO -->
+        <audio
+            id="winampAudio"
+            preload="metadata"
+        ></audio>
+
+    </div>
+
+</div>
 
 <!-- =====================================================
      MATRIX
@@ -5185,6 +5758,741 @@ async function bootAnimation() {
     terminalInput.focus();
 }
 
+/* =====================================================
+   WINAMP
+===================================================== */
+
+const winampAudio =
+    document.getElementById(
+        "winampAudio"
+    );
+
+const winampFile =
+    document.getElementById(
+        "winampFile"
+    );
+
+const winampPlay =
+    document.getElementById(
+        "winampPlay"
+    );
+
+const winampPause =
+    document.getElementById(
+        "winampPause"
+    );
+
+const winampStop =
+    document.getElementById(
+        "winampStop"
+    );
+
+const winampPrevious =
+    document.getElementById(
+        "winampPrevious"
+    );
+
+const winampNext =
+    document.getElementById(
+        "winampNext"
+    );
+
+const winampProgress =
+    document.getElementById(
+        "winampProgress"
+    );
+
+const winampCurrentTime =
+    document.getElementById(
+        "winampCurrentTime"
+    );
+
+const winampDuration =
+    document.getElementById(
+        "winampDuration"
+    );
+
+const winampVolume =
+    document.getElementById(
+        "winampVolume"
+    );
+
+const winampVolumeValue =
+    document.getElementById(
+        "winampVolumeValue"
+    );
+
+const winampTrackName =
+    document.getElementById(
+        "winampTrackName"
+    );
+
+const winampStatus =
+    document.getElementById(
+        "winampStatus"
+    );
+
+const winampPlaylistItems =
+    document.getElementById(
+        "winampPlaylistItems"
+    );
+
+
+let winampPlaylist = [];
+
+let winampCurrentIndex = -1;
+
+
+/* =====================================================
+   TIME FORMAT
+===================================================== */
+
+function winampFormatTime(seconds) {
+
+    if (
+        !Number.isFinite(seconds) ||
+        seconds < 0
+    ) {
+
+        return "00:00";
+    }
+
+
+    const minutes =
+        Math.floor(
+            seconds / 60
+        );
+
+
+    const secs =
+        Math.floor(
+            seconds % 60
+        );
+
+
+    return (
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(secs).padStart(2, "0")
+    );
+}
+
+
+/* =====================================================
+   UPDATE PLAYLIST
+===================================================== */
+
+function winampRenderPlaylist() {
+
+    winampPlaylistItems.innerHTML =
+        "";
+
+
+    if (
+        !winampPlaylist.length
+    ) {
+
+        const empty =
+            document.createElement("div");
+
+        empty.id =
+            "winampPlaylistEmpty";
+
+        empty.textContent =
+            "NO AUDIO FILES";
+
+        winampPlaylistItems.appendChild(
+            empty
+        );
+
+        return;
+    }
+
+
+    winampPlaylist.forEach(
+        (file, index) => {
+
+            const item =
+                document.createElement("div");
+
+            item.className =
+                "winampPlaylistItem";
+
+
+            if (
+                index ===
+                winampCurrentIndex
+            ) {
+
+                item.classList.add(
+                    "active"
+                );
+            }
+
+
+            const number =
+                document.createElement("span");
+
+            number.className =
+                "winampPlaylistNumber";
+
+            number.textContent =
+                String(index + 1)
+                    .padStart(2, "0");
+
+
+            const name =
+                document.createElement("span");
+
+            name.className =
+                "winampPlaylistName";
+
+            name.textContent =
+                file.name;
+
+
+            item.appendChild(
+                number
+            );
+
+            item.appendChild(
+                name
+            );
+
+
+            item.addEventListener(
+                "dblclick",
+                () => {
+
+                    winampLoadTrack(
+                        index
+                    );
+
+                }
+            );
+
+
+            item.addEventListener(
+                "click",
+                () => {
+
+                    winampLoadTrack(
+                        index
+                    );
+
+                }
+            );
+
+
+            winampPlaylistItems.appendChild(
+                item
+            );
+
+        }
+    );
+}
+
+
+/* =====================================================
+   LOAD TRACK
+===================================================== */
+
+function winampLoadTrack(index) {
+
+    if (
+        index < 0 ||
+        index >= winampPlaylist.length
+    ) {
+
+        return;
+    }
+
+
+    winampCurrentIndex =
+        index;
+
+
+    const file =
+        winampPlaylist[index];
+
+
+    const url =
+        URL.createObjectURL(
+            file
+        );
+
+
+    winampAudio.pause();
+
+
+    winampAudio.src =
+        url;
+
+
+    winampAudio.load();
+
+
+    winampTrackName.textContent =
+        file.name;
+
+
+    winampStatus.textContent =
+        "WINAMP // LOADED";
+
+
+    winampProgress.value =
+        0;
+
+
+    winampCurrentTime.textContent =
+        "00:00";
+
+
+    winampDuration.textContent =
+        "00:00";
+
+
+    winampRenderPlaylist();
+
+
+    winampAudio.play()
+        .then(
+            () => {
+
+                winampStatus.textContent =
+                    "WINAMP // PLAYING";
+
+            }
+        )
+        .catch(
+            error => {
+
+                console.warn(
+                    "[WINAMP] Autoplay:",
+                    error
+                );
+
+                winampStatus.textContent =
+                    "WINAMP // READY";
+            }
+        );
+}
+
+
+/* =====================================================
+   PLAY
+===================================================== */
+
+function winampPlayTrack() {
+
+    if (
+        !winampAudio.src
+    ) {
+
+        if (
+            winampPlaylist.length
+        ) {
+
+            winampLoadTrack(
+                winampCurrentIndex >= 0
+                    ? winampCurrentIndex
+                    : 0
+            );
+
+        }
+
+        return;
+    }
+
+
+    winampAudio
+        .play()
+        .then(
+            () => {
+
+                winampStatus.textContent =
+                    "WINAMP // PLAYING";
+
+            }
+        )
+        .catch(
+            error => {
+
+                console.error(
+                    "[WINAMP] Play:",
+                    error
+                );
+
+            }
+        );
+}
+
+
+/* =====================================================
+   PAUSE
+===================================================== */
+
+function winampPauseTrack() {
+
+    winampAudio.pause();
+
+
+    winampStatus.textContent =
+        "WINAMP // PAUSED";
+}
+
+
+/* =====================================================
+   STOP
+===================================================== */
+
+function winampStopTrack() {
+
+    winampAudio.pause();
+
+
+    winampAudio.currentTime =
+        0;
+
+
+    winampProgress.value =
+        0;
+
+
+    winampCurrentTime.textContent =
+        "00:00";
+
+
+    winampStatus.textContent =
+        "WINAMP // STOPPED";
+}
+
+
+/* =====================================================
+   PREVIOUS
+===================================================== */
+
+function winampPreviousTrack() {
+
+    if (
+        !winampPlaylist.length
+    ) {
+
+        return;
+    }
+
+
+    let index =
+        winampCurrentIndex - 1;
+
+
+    if (
+        index < 0
+    ) {
+
+        index =
+            winampPlaylist.length - 1;
+    }
+
+
+    winampLoadTrack(
+        index
+    );
+}
+
+
+/* =====================================================
+   NEXT
+===================================================== */
+
+function winampNextTrack() {
+
+    if (
+        !winampPlaylist.length
+    ) {
+
+        return;
+    }
+
+
+    let index =
+        winampCurrentIndex + 1;
+
+
+    if (
+        index >=
+        winampPlaylist.length
+    ) {
+
+        index = 0;
+    }
+
+
+    winampLoadTrack(
+        index
+    );
+}
+
+
+/* =====================================================
+   FILE SELECT
+===================================================== */
+
+winampFile.addEventListener(
+    "change",
+    () => {
+
+        const files =
+            Array.from(
+                winampFile.files || []
+            );
+
+
+        if (
+            !files.length
+        ) {
+
+            return;
+        }
+
+
+        winampPlaylist =
+            files.filter(
+                file =>
+                    file.type.startsWith(
+                        "audio/"
+                    )
+            );
+
+
+        winampCurrentIndex =
+            -1;
+
+
+        winampAudio.pause();
+
+
+        winampAudio.removeAttribute(
+            "src"
+        );
+
+
+        winampTrackName.textContent =
+            "NO TRACK";
+
+
+        winampStatus.textContent =
+            "WINAMP // PLAYLIST LOADED";
+
+
+        winampRenderPlaylist();
+
+    }
+);
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+winampPlay.addEventListener(
+    "click",
+    winampPlayTrack
+);
+
+
+winampPause.addEventListener(
+    "click",
+    winampPauseTrack
+);
+
+
+winampStop.addEventListener(
+    "click",
+    winampStopTrack
+);
+
+
+winampPrevious.addEventListener(
+    "click",
+    winampPreviousTrack
+);
+
+
+winampNext.addEventListener(
+    "click",
+    winampNextTrack
+);
+
+
+/* =====================================================
+   PROGRESS
+===================================================== */
+
+winampAudio.addEventListener(
+    "timeupdate",
+    () => {
+
+        if (
+            !Number.isFinite(
+                winampAudio.duration
+            ) ||
+            winampAudio.duration <= 0
+        ) {
+
+            return;
+        }
+
+
+        const percent =
+            (
+                winampAudio.currentTime /
+                winampAudio.duration
+            ) *
+            100;
+
+
+        winampProgress.value =
+            percent;
+
+
+        winampCurrentTime.textContent =
+            winampFormatTime(
+                winampAudio.currentTime
+            );
+
+
+        winampDuration.textContent =
+            winampFormatTime(
+                winampAudio.duration
+            );
+
+    }
+);
+
+
+/* =====================================================
+   SEEK
+===================================================== */
+
+winampProgress.addEventListener(
+    "input",
+    () => {
+
+        if (
+            !Number.isFinite(
+                winampAudio.duration
+            )
+        ) {
+
+            return;
+        }
+
+
+        winampAudio.currentTime =
+            (
+                Number(
+                    winampProgress.value
+                ) /
+                100
+            ) *
+            winampAudio.duration;
+
+    }
+);
+
+
+/* =====================================================
+   VOLUME
+===================================================== */
+
+winampVolume.addEventListener(
+    "input",
+    () => {
+
+        const value =
+            Number(
+                winampVolume.value
+            );
+
+
+        winampAudio.volume =
+            value;
+
+
+        winampVolumeValue.textContent =
+            Math.round(
+                value * 100
+            ) +
+            "%";
+
+    }
+);
+
+
+/* =====================================================
+   AUDIO READY
+===================================================== */
+
+winampAudio.addEventListener(
+    "loadedmetadata",
+    () => {
+
+        winampDuration.textContent =
+            winampFormatTime(
+                winampAudio.duration
+            );
+
+    }
+);
+
+
+/* =====================================================
+   TRACK END
+===================================================== */
+
+winampAudio.addEventListener(
+    "ended",
+    () => {
+
+        winampStatus.textContent =
+            "WINAMP // NEXT TRACK";
+
+
+        winampNextTrack();
+
+    }
+);
+
+
+/* =====================================================
+   ERROR
+===================================================== */
+
+winampAudio.addEventListener(
+    "error",
+    () => {
+
+        winampStatus.textContent =
+            "WINAMP // AUDIO ERROR";
+
+        console.error(
+            "[WINAMP] Erreur audio."
+        );
+
+    }
+);
+
+
+/* =====================================================
+   INITIAL VOLUME
+===================================================== */
+
+winampAudio.volume =
+    1;
+
+
+winampRenderPlaylist();
 
 /* =====================================================
    INITIALISATION
