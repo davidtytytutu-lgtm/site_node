@@ -81,7 +81,8 @@ const GITHUB_BRANCH =
 const MEDIA_FOLDER =
     "site_node/media";
 
-
+const CHAT_LOG_FOLDER = 
+   "site_node/chat_logs";
 /* =====================================================
    CHAT HISTORY CONFIG
 ===================================================== */
@@ -96,6 +97,105 @@ const CHAT_LOG_DIR =
 const CHAT_LOG_MAX_SIZE =
     10 * 1024 * 1024;
 
+/* =====================================================
+   CHAT HISTORY
+===================================================== */
+
+app.get("/api/chat-history", async (req, res) => {
+
+    try {
+
+        const data = await githubRequest(
+            `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${CHAT_LOG_FOLDER}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+        );
+
+        if (!Array.isArray(data)) {
+
+            return res.json([]);
+
+        }
+
+        const logFiles = data
+            .filter(file =>
+                file.type === "file" &&
+                file.name.endsWith(".json")
+            )
+            .sort((a, b) =>
+                a.name.localeCompare(b.name)
+            );
+
+
+        const history = [];
+
+
+        for (const file of logFiles) {
+
+            try {
+
+                const logData =
+                    await githubRequest(
+                        `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${file.path}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+                    );
+
+
+                if (!logData.content)
+                    continue;
+
+
+                const content =
+                    Buffer
+                        .from(
+                            logData.content.replace(/\n/g, ""),
+                            "base64"
+                        )
+                        .toString("utf8");
+
+
+                const messages =
+                    JSON.parse(content);
+
+
+                if (Array.isArray(messages)) {
+
+                    history.push(
+                        ...messages
+                    );
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    `Erreur lecture ${file.name}:`,
+                    error.message
+                );
+
+            }
+
+        }
+
+
+        res.json(history);
+
+
+    } catch (error) {
+
+        console.error(
+            "Erreur récupération historique:",
+            error.message
+        );
+
+
+        res.status(500).json({
+
+            error:
+                "Impossible de récupérer l'historique."
+
+        });
+
+    }
+
+});
 
 /* =====================================================
    CREATE CHAT LOG DIRECTORY
