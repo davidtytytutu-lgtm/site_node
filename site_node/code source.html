@@ -768,6 +768,80 @@ body.discoMode #crt {
         monospace;
 }
 
+/* =====================================================
+   CHAT MESSAGES AVEC AVATAR
+===================================================== */
+
+.chatMessage {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 9px;
+
+    margin-bottom: 10px;
+
+    padding: 5px;
+
+    border-bottom:
+        1px solid rgba(0,255,102,.08);
+}
+
+
+.chatAvatar {
+
+    width: 36px;
+
+    height: 36px;
+
+    min-width: 36px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    border:
+        1px solid #00ff66;
+
+    background:
+        #001a08;
+
+    box-shadow:
+        0 0 8px rgba(0,255,102,.15);
+}
+
+
+.chatMessageContent {
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.chatUsername {
+
+    color: #00ff66;
+
+    font-weight: bold;
+
+    font-size: 12px;
+
+    margin-bottom: 2px;
+}
+
+
+.chatMessageText {
+
+    color: #00ff66;
+
+    font-size: 13px;
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+}
 
 /* =====================================================
    USERS
@@ -793,6 +867,58 @@ body.discoMode #crt {
     white-space: pre-wrap;
 }
 
+/* =====================================================
+   ONLINE USERS
+===================================================== */
+
+.onlineUser {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-top: 8px;
+
+    padding: 5px;
+
+    border-bottom:
+        1px solid rgba(0,255,102,.08);
+}
+
+
+.onlineUserAvatar {
+
+    width: 32px;
+
+    height: 32px;
+
+    min-width: 32px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    border:
+        1px solid #00ff66;
+
+    background:
+        #001a08;
+
+    box-shadow:
+        0 0 6px rgba(0,255,102,.2);
+}
+
+
+.onlineUser span {
+
+    color: #00ff66;
+
+    font-size: 12px;
+
+    overflow-wrap: anywhere;
+}
 
 /* =====================================================
    MEDIA
@@ -2156,25 +2282,101 @@ function terminalPrint(text) {
    CHAT PRINT
 ===================================================== */
 
-function chatPrint(user, message) {
+function chatPrint(user, message, avatar = "") {
 
     const line =
         document.createElement("div");
 
-    line.textContent =
-        "[" +
-        String(user || "SYSTEM") +
-        "] " +
-        String(message || "");
+    line.className = "chatMessage";
+
+
+    /* AVATAR */
+
+    const avatarImg =
+        document.createElement("img");
+
+    avatarImg.className =
+        "chatAvatar";
+
+    avatarImg.alt =
+        "Avatar";
+
+
+    if (avatar) {
+
+        avatarImg.src =
+            avatar;
+
+    } else {
+
+        avatarImg.src =
+            "https://ui-avatars.com/api/?name=" +
+            encodeURIComponent(
+                user || "SYSTEM"
+            ) +
+            "&background=001a08&color=00ff66&bold=true";
+    }
+
+
+    /* CONTENU */
+
+    const content =
+        document.createElement("div");
+
+    content.className =
+        "chatMessageContent";
+
+
+    /* PSEUDO */
+
+    const usernameElement =
+        document.createElement("div");
+
+    usernameElement.className =
+        "chatUsername";
+
+    usernameElement.textContent =
+        user || "SYSTEM";
+
+
+    /* MESSAGE */
+
+    const messageElement =
+        document.createElement("div");
+
+    messageElement.className =
+        "chatMessageText";
+
+    messageElement.textContent =
+        message || "";
+
+
+    content.appendChild(
+        usernameElement
+    );
+
+    content.appendChild(
+        messageElement
+    );
+
+
+    line.appendChild(
+        avatarImg
+    );
+
+    line.appendChild(
+        content
+    );
+
 
     chatMessages.appendChild(
         line
     );
 
+
     chatMessages.scrollTop =
         chatMessages.scrollHeight;
 }
-
 
 /* =====================================================
    ACCOUNT - LOGIN
@@ -2948,30 +3150,121 @@ function connect() {
                 "chat"
             ) {
 
-                chatPrint(
-                    data.username,
-                    data.message
-                );
+                 chatPrint(
+                  data.username,
+                  data.message,
+                  data.avatar
+             );
             }
 
 
             if (
-                data.type ===
-                "users"
-            ) {
+    data.type ===
+    "users"
+) {
 
-                const users =
-                    Array.isArray(data.users)
-                        ? data.users
-                        : [];
+    const users =
+        Array.isArray(data.users)
+            ? data.users
+            : [];
 
 
-                usersList.textContent =
-                    "SYSTEM: " +
-                    users.length +
-                    " USERS\n\n" +
-                    users.join("\n");
-            }
+    usersList.innerHTML =
+        "";
+
+
+    const title =
+        document.createElement("div");
+
+    title.textContent =
+        "SYSTEM: " +
+        users.length +
+        " USERS";
+
+    usersList.appendChild(
+        title
+    );
+
+
+    users.forEach(user => {
+
+        const userLine =
+            document.createElement("div");
+
+        userLine.className =
+            "onlineUser";
+
+
+        /* AVATAR */
+
+        const avatar =
+            document.createElement("img");
+
+        avatar.className =
+            "onlineUserAvatar";
+
+
+        const userName =
+    typeof user === "string"
+        ? user
+        : (
+            user.username ||
+            user.name ||
+            user.pseudo ||
+            user.displayName ||
+            "UNKNOWN"
+        );
+
+
+        const userAvatar =
+            typeof user === "object"
+                ? user.avatar
+                : "";
+
+
+        if (userAvatar) {
+
+            avatar.src =
+                userAvatar;
+
+        } else {
+
+            avatar.src =
+                "https://ui-avatars.com/api/?name=" +
+                encodeURIComponent(userName) +
+                "&background=001a08&color=00ff66&bold=true";
+        }
+
+
+        avatar.alt =
+            userName;
+
+
+        /* NOM */
+
+        const name =
+            document.createElement("span");
+
+        name.textContent =
+            userName;
+
+
+        userLine.appendChild(
+            avatar
+        );
+
+        userLine.appendChild(
+            name
+        );
+
+
+        usersList.appendChild(
+            userLine
+        );
+
+    });
+
+}
 
 
             if (
@@ -3322,6 +3615,15 @@ async function terminalCommand(command) {
         return;
     }
 
+    if (command.toLowerCase() === "portal") {
+
+    window.open(
+        "https://david-wiki.neocities.org/portal",
+        "_blank"
+    );
+
+    return;
+ }
 
     /* BROKEN */
 
@@ -4072,15 +4374,16 @@ async function loadChatHistory() {
 
 
         messages.forEach(
-            message => {
+    message => {
 
-                chatPrint(
-                    message.username,
-                    message.message
-                );
-
-            }
+        chatPrint(
+            message.username,
+            message.message,
+            message.avatar
         );
+
+    }
+);
 
 
     } catch (error) {
