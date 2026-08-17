@@ -43,6 +43,9 @@ const GITHUB_BRANCH =
 const MEDIA_FOLDER =
     "site_node/media";
 
+const MUSIC_FOLDER =
+    "site_node/musique";
+
 const CHAT_LOG_FOLDER =
     "site_node/chat_logs";
 
@@ -301,421 +304,6 @@ server.on(
 
 const users =
     new Map();
-
-
-/* =====================================================
-   WINAMP STATE
-===================================================== */
-
-/*
-    État global du lecteur Winamp.
-
-    Tous les clients connectés reçoivent cet état.
-
-    Le serveur ne joue PAS la musique.
-    Il sert uniquement à synchroniser
-    les lecteurs entre les clients.
-*/
-
-const winampState = {
-
-    playing:
-        false,
-
-    title:
-        "",
-
-    artist:
-        "",
-
-    album:
-        "",
-
-    cover:
-        "",
-
-    duration:
-        0,
-
-    position:
-        0,
-
-    volume:
-        100,
-
-    shuffle:
-        false,
-
-    repeat:
-        false,
-
-    playlist:
-        [],
-
-    currentIndex:
-        -1,
-
-    updatedAt:
-        Date.now(),
-
-    updatedBy:
-        null
-
-};
-
-
-/* =====================================================
-   WINAMP HELPERS
-===================================================== */
-
-function cleanWinampString(
-    value,
-    maxLength = 500
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /[<>]/g,
-            ""
-        )
-        .substring(
-            0,
-            maxLength
-        );
-
-}
-
-
-function cleanWinampNumber(
-    value,
-    fallback = 0,
-    min = 0,
-    max = Number.MAX_SAFE_INTEGER
-) {
-
-    const number =
-        Number(value);
-
-    if (
-        !Number.isFinite(
-            number
-        )
-    ) {
-
-        return fallback;
-
-    }
-
-    return Math.min(
-        max,
-        Math.max(
-            min,
-            number
-        )
-    );
-
-}
-
-
-function getWinampState() {
-
-    return {
-
-        ...winampState,
-
-        playlist:
-            Array.isArray(
-                winampState.playlist
-            )
-                ? winampState.playlist
-                : []
-
-    };
-
-}
-
-
-function sendWinampState(
-    socket
-) {
-
-    if (
-        !socket ||
-        socket.readyState !==
-        WebSocket.OPEN
-    ) {
-
-        return;
-
-    }
-
-    socket.send(
-        JSON.stringify({
-
-            type:
-                "winampState",
-
-            state:
-                getWinampState()
-
-        })
-    );
-
-}
-
-
-function broadcastWinamp(
-    except = null
-) {
-
-    broadcast({
-
-        type:
-            "winampState",
-
-        state:
-            getWinampState()
-
-    }, except);
-
-}
-
-
-/*
- * Met à jour l'état du lecteur.
- */
-function updateWinampState(
-    data,
-    username = null
-) {
-
-    if (
-        typeof data !== "object" ||
-        !data
-    ) {
-
-        return;
-
-    }
-
-
-    if (
-        typeof data.playing ===
-        "boolean"
-    ) {
-
-        winampState.playing =
-            data.playing;
-
-    }
-
-
-    if (
-        data.title !== undefined
-    ) {
-
-        winampState.title =
-            cleanWinampString(
-                data.title,
-                300
-            );
-
-    }
-
-
-    if (
-        data.artist !== undefined
-    ) {
-
-        winampState.artist =
-            cleanWinampString(
-                data.artist,
-                300
-            );
-
-    }
-
-
-    if (
-        data.album !== undefined
-    ) {
-
-        winampState.album =
-            cleanWinampString(
-                data.album,
-                300
-            );
-
-    }
-
-
-    if (
-        data.cover !== undefined
-    ) {
-
-        winampState.cover =
-            cleanWinampString(
-                data.cover,
-                1000
-            );
-
-    }
-
-
-    if (
-        data.duration !== undefined
-    ) {
-
-        winampState.duration =
-            cleanWinampNumber(
-                data.duration,
-                winampState.duration,
-                0
-            );
-
-    }
-
-
-    if (
-        data.position !== undefined
-    ) {
-
-        winampState.position =
-            cleanWinampNumber(
-                data.position,
-                winampState.position,
-                0,
-                winampState.duration || Number.MAX_SAFE_INTEGER
-            );
-
-    }
-
-
-    if (
-        data.volume !== undefined
-    ) {
-
-        winampState.volume =
-            cleanWinampNumber(
-                data.volume,
-                winampState.volume,
-                0,
-                100
-            );
-
-    }
-
-
-    if (
-        typeof data.shuffle ===
-        "boolean"
-    ) {
-
-        winampState.shuffle =
-            data.shuffle;
-
-    }
-
-
-    if (
-        typeof data.repeat ===
-        "boolean"
-    ) {
-
-        winampState.repeat =
-            data.repeat;
-
-    }
-
-
-    if (
-        Array.isArray(
-            data.playlist
-        )
-    ) {
-
-        winampState.playlist =
-            data.playlist
-                .slice(
-                    0,
-                    1000
-                )
-                .map(
-                    track => ({
-
-                        title:
-                            cleanWinampString(
-                                track?.title,
-                                300
-                            ),
-
-                        artist:
-                            cleanWinampString(
-                                track?.artist,
-                                300
-                            ),
-
-                        album:
-                            cleanWinampString(
-                                track?.album,
-                                300
-                            ),
-
-                        cover:
-                            cleanWinampString(
-                                track?.cover,
-                                1000
-                            ),
-
-                        url:
-                            cleanWinampString(
-                                track?.url,
-                                2000
-                            ),
-
-                        duration:
-                            cleanWinampNumber(
-                                track?.duration,
-                                0,
-                                0
-
-                            )
-
-                    })
-                );
-
-    }
-
-
-    if (
-        data.currentIndex !== undefined
-    ) {
-
-        winampState.currentIndex =
-            Math.floor(
-                cleanWinampNumber(
-                    data.currentIndex,
-                    winampState.currentIndex,
-                    -1,
-                    Math.max(
-                        -1,
-                        winampState.playlist.length - 1
-                    )
-                )
-            );
-
-    }
-
-
-    winampState.updatedAt =
-        Date.now();
-
-    winampState.updatedBy =
-        username || null;
-
-}
 
 
 /* =====================================================
@@ -1636,6 +1224,7 @@ app.get(
             "site_node/package.json",
             "site_node/package-lock.json",
             "site_node/media/",
+            "site_node/musique/",
             "site_node/chat_logs/"
 
         ]);
@@ -1655,83 +1244,6 @@ app.get(
         res.send(
             "David Terminal Server online."
         );
-
-    }
-);
-
-
-/* =====================================================
-   WINAMP API
-===================================================== */
-
-/*
- * Permet au site de récupérer l'état actuel
- * même sans attendre le WebSocket.
- */
-
-app.get(
-    "/api/winamp",
-    (req, res) => {
-
-        res.json(
-            getWinampState()
-        );
-
-    }
-);
-
-
-/*
- * Cette route permet éventuellement à un
- * autre programme de mettre à jour Winamp.
- *
- * Authentification obligatoire.
- */
-
-app.post(
-    "/api/winamp",
-    requireAuth,
-    (req, res) => {
-
-        try {
-
-            updateWinampState(
-                req.body,
-                req.session.username
-            );
-
-
-            broadcastWinamp();
-
-
-            res.json({
-
-                success:
-                    true,
-
-                state:
-                    getWinampState()
-
-            });
-
-        } catch (error) {
-
-            console.error(
-                "WINAMP API:",
-                error
-            );
-
-
-            res.status(
-                500
-            ).json({
-
-                error:
-                    "Impossible de mettre à jour Winamp."
-
-            });
-
-        }
 
     }
 );
@@ -2096,6 +1608,766 @@ app.post(
 
 
 /* =====================================================
+   🎵 MUSIC / WINAMP CONFIG
+===================================================== */
+
+const MAX_MUSIC_SIZE =
+    25 * 1024 * 1024;
+
+
+const ALLOWED_MUSIC_TYPES = [
+
+    "audio/mpeg",
+    "audio/mp3",
+
+    "audio/wav",
+    "audio/x-wav",
+
+    "audio/ogg",
+
+    "audio/opus",
+
+    "audio/mp4",
+
+    "audio/aac",
+
+    "audio/flac",
+
+    "audio/webm"
+
+];
+
+
+const ALLOWED_MUSIC_EXTENSIONS = [
+
+    ".mp3",
+    ".wav",
+    ".ogg",
+    ".opus",
+    ".m4a",
+    ".aac",
+    ".flac",
+    ".webm"
+
+];
+
+
+const musicUpload =
+    multer({
+
+        storage:
+            multer.memoryStorage(),
+
+        limits: {
+
+            fileSize:
+                MAX_MUSIC_SIZE
+
+        },
+
+        fileFilter:
+            (req, file, callback) => {
+
+                const extension =
+                    path.extname(
+                        file.originalname
+                    )
+                    .toLowerCase();
+
+
+                const typeOK =
+                    ALLOWED_MUSIC_TYPES.includes(
+                        file.mimetype
+                    );
+
+
+                const extensionOK =
+                    ALLOWED_MUSIC_EXTENSIONS.includes(
+                        extension
+                    );
+
+
+                if (
+                    typeOK ||
+                    extensionOK
+                ) {
+
+                    callback(
+                        null,
+                        true
+                    );
+
+                } else {
+
+                    callback(
+                        new Error(
+                            "Format audio non autorisé."
+                        )
+                    );
+
+                }
+
+            }
+
+    });
+
+
+/* =====================================================
+   🎵 MUSIC LIST
+===================================================== */
+
+app.get(
+    "/api/music",
+    async (req, res) => {
+
+        try {
+
+            const data =
+                await githubRequest(
+
+                    `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${MUSIC_FOLDER}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+
+                );
+
+
+            if (
+                !Array.isArray(data)
+            ) {
+
+                return res.json([]);
+
+            }
+
+
+            const music =
+                data
+                    .filter(
+                        file =>
+                            file.type ===
+                            "file"
+                    )
+                    .filter(
+                        file => {
+
+                            const extension =
+                                path.extname(
+                                    file.name
+                                )
+                                .toLowerCase();
+
+
+                            return ALLOWED_MUSIC_EXTENSIONS.includes(
+                                extension
+                            );
+
+                        }
+                    )
+                    .map(
+                        file => ({
+
+                            name:
+                                file.name,
+
+                            path:
+                                file.path,
+
+                            size:
+                                file.size,
+
+                            sha:
+                                file.sha,
+
+                            url:
+                                `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${file.path}`,
+
+                            download_url:
+                                file.download_url,
+
+                            html_url:
+                                file.html_url
+
+                        })
+                    );
+
+
+            res.json(
+                music
+            );
+
+        } catch (error) {
+
+            /*
+             * Si le dossier n'existe pas encore,
+             * GitHub renvoie une erreur 404.
+             *
+             * Dans ce cas on renvoie simplement
+             * une bibliothèque vide.
+             */
+
+            if (
+                String(
+                    error.message
+                ).includes(
+                    "Not Found"
+                )
+            ) {
+
+                return res.json([]);
+
+            }
+
+
+            console.error(
+                "MUSIC LIST:",
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   🎵 MUSIC UPLOAD
+===================================================== */
+
+app.post(
+    "/api/music/upload",
+    requireAuth,
+    musicUpload.single("file"),
+
+    async (req, res) => {
+
+        try {
+
+            if (
+                !req.file
+            ) {
+
+                return res.status(
+                    400
+                ).json({
+
+                    error:
+                        "Aucune musique reçue."
+
+                });
+
+            }
+
+
+            let filename =
+                String(
+                    req.body.customName ||
+                    req.file.originalname ||
+                    "musique"
+                )
+                    .trim();
+
+
+            filename =
+                filename
+                    .replace(
+                        /[<>:"/\\|?*\x00-\x1F]/g,
+                        "_"
+                    )
+                    .replace(
+                        /\s+/g,
+                        "_"
+                    )
+                    .substring(
+                        0,
+                        150
+                    );
+
+
+            const originalExtension =
+                path.extname(
+                    req.file.originalname
+                )
+                .toLowerCase();
+
+
+            if (
+                !path.extname(
+                    filename
+                )
+            ) {
+
+                filename +=
+                    originalExtension;
+
+            }
+
+
+            const extension =
+                path.extname(
+                    filename
+                )
+                .toLowerCase();
+
+
+            if (
+                !ALLOWED_MUSIC_EXTENSIONS.includes(
+                    extension
+                )
+            ) {
+
+                return res.status(
+                    400
+                ).json({
+
+                    error:
+                        "Extension audio non autorisée."
+
+                });
+
+            }
+
+
+            const githubPath =
+                `${MUSIC_FOLDER}/${filename}`;
+
+
+            const content =
+                req.file.buffer.toString(
+                    "base64"
+                );
+
+
+            console.log(
+                "========================================"
+            );
+
+            console.log(
+                "🎵 UPLOAD MUSIQUE"
+            );
+
+            console.log(
+                "Fichier:",
+                filename
+            );
+
+            console.log(
+                "Chemin:",
+                githubPath
+            );
+
+            console.log(
+                "Taille:",
+                req.file.size,
+                "octets"
+            );
+
+            console.log(
+                "Type:",
+                req.file.mimetype
+            );
+
+
+            /*
+             * On regarde si le fichier existe déjà.
+             *
+             * Cela permet de récupérer son SHA
+             * et de le remplacer correctement.
+             */
+
+            let existingFile =
+                null;
+
+
+            try {
+
+                existingFile =
+                    await githubRequest(
+
+                        `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${githubPath}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+
+                    );
+
+            } catch (error) {
+
+                /*
+                 * 404 = fichier inexistant.
+                 * Ce n'est donc pas une erreur.
+                 */
+
+                if (
+                    !String(
+                        error.message
+                    ).includes(
+                        "Not Found"
+                    )
+                ) {
+
+                    throw error;
+
+                }
+
+            }
+
+
+            const body = {
+
+                message:
+                    existingFile
+                        ? `Update music: ${filename}`
+                        : `Upload music: ${filename}`,
+
+                content:
+                    content,
+
+                branch:
+                    GITHUB_BRANCH
+
+            };
+
+
+            if (
+                existingFile &&
+                existingFile.sha
+            ) {
+
+                body.sha =
+                    existingFile.sha;
+
+            }
+
+
+            const result =
+                await githubRequest(
+
+                    `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${githubPath}`,
+
+                    {
+
+                        method:
+                            "PUT",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+                        body:
+                            JSON.stringify(
+                                body
+                            )
+
+                    }
+
+                );
+
+
+            const rawUrl =
+                `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${githubPath}`;
+
+
+            console.log(
+                "✅ MUSIQUE ENVOYÉE SUR GITHUB"
+            );
+
+            console.log(
+                rawUrl
+            );
+
+            console.log(
+                "========================================"
+            );
+
+
+            /*
+             * On informe tous les Winamp connectés.
+             */
+
+            broadcast({
+
+                type:
+                    "music",
+
+                action:
+                    existingFile
+                        ? "updated"
+                        : "added",
+
+                username:
+                    req.session.username,
+
+                name:
+                    filename,
+
+                path:
+                    githubPath,
+
+                url:
+                    rawUrl,
+
+                size:
+                    req.file.size,
+
+                mimetype:
+                    req.file.mimetype,
+
+                timestamp:
+                    Date.now()
+
+            });
+
+
+            res.json({
+
+                success:
+                    true,
+
+                action:
+                    existingFile
+                        ? "updated"
+                        : "added",
+
+                name:
+                    filename,
+
+                path:
+                    githubPath,
+
+                url:
+                    rawUrl,
+
+                size:
+                    req.file.size,
+
+                mimetype:
+                    req.file.mimetype,
+
+                github:
+                    result.content?.html_url ||
+                    null
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ MUSIC UPLOAD:",
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   🎵 MUSIC DELETE
+===================================================== */
+
+app.delete(
+    "/api/music/:filename",
+    requireAuth,
+    async (req, res) => {
+
+        try {
+
+            const filename =
+                path.basename(
+                    String(
+                        req.params.filename ||
+                        ""
+                    )
+                );
+
+
+            if (
+                !filename
+            ) {
+
+                return res.status(
+                    400
+                ).json({
+
+                    error:
+                        "Nom de fichier invalide."
+
+                });
+
+            }
+
+
+            const extension =
+                path.extname(
+                    filename
+                )
+                .toLowerCase();
+
+
+            if (
+                !ALLOWED_MUSIC_EXTENSIONS.includes(
+                    extension
+                )
+            ) {
+
+                return res.status(
+                    400
+                ).json({
+
+                    error:
+                        "Fichier audio non autorisé."
+
+                });
+
+            }
+
+
+            const githubPath =
+                `${MUSIC_FOLDER}/${filename}`;
+
+
+            /*
+             * On récupère le SHA obligatoire
+             * pour supprimer un fichier GitHub.
+             */
+
+            const existing =
+                await githubRequest(
+
+                    `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${githubPath}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+
+                );
+
+
+            if (
+                !existing ||
+                !existing.sha
+            ) {
+
+                return res.status(
+                    404
+                ).json({
+
+                    error:
+                        "Musique introuvable."
+
+                });
+
+            }
+
+
+            await githubRequest(
+
+                `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${githubPath}`,
+
+                {
+
+                    method:
+                        "DELETE",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            message:
+                                `Delete music: ${filename}`,
+
+                            sha:
+                                existing.sha,
+
+                            branch:
+                                GITHUB_BRANCH
+
+                        })
+
+                }
+
+            );
+
+
+            broadcast({
+
+                type:
+                    "music",
+
+                action:
+                    "deleted",
+
+                name:
+                    filename,
+
+                path:
+                    githubPath,
+
+                username:
+                    req.session.username,
+
+                timestamp:
+                    Date.now()
+
+            });
+
+
+            res.json({
+
+                success:
+                    true,
+
+                name:
+                    filename
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "MUSIC DELETE:",
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
    CHAT LOG
 ===================================================== */
 
@@ -2430,6 +2702,10 @@ app.get(
 );
 
 
+/* =====================================================
+   CHAT HISTORY ALIAS
+===================================================== */
+
 app.get(
     "/api/chat/history",
     (req, res) => {
@@ -2628,7 +2904,7 @@ wss.on(
 
 
         /* =================================================
-           HISTORIQUE CHAT
+           HISTORIQUE
         ================================================= */
 
         socket.send(
@@ -2643,15 +2919,6 @@ wss.on(
                     )
 
             })
-        );
-
-
-        /* =================================================
-           WINAMP : ÉTAT ACTUEL
-        ================================================= */
-
-        sendWinampState(
-            socket
         );
 
 
@@ -2701,184 +2968,121 @@ wss.on(
                 }
 
 
-                const currentUser =
-                    users.get(
-                        socket
-                    );
-
-
-                if (
-                    !currentUser
-                ) {
-
-                    return;
-
-                }
-
-
-                /* =================================================
-                   WINAMP
-                ================================================= */
-
                 if (
                     data.type ===
-                    "winamp"
-                ) {
-
-                    /*
-                     * On accepte :
-                     *
-                     * {
-                     *   type: "winamp",
-                     *   state: {...}
-                     * }
-                     *
-                     * ou directement :
-                     *
-                     * {
-                     *   type: "winamp",
-                     *   playing: true,
-                     *   title: "..."
-                     * }
-                     */
-
-                    const winampData =
-                        data.state &&
-                        typeof data.state ===
-                        "object"
-                            ? data.state
-                            : data;
-
-
-                    updateWinampState(
-
-                        winampData,
-
-                        currentUser.name
-
-                    );
-
-
-                    /*
-                     * On renvoie l'état
-                     * à tous les clients.
-                     */
-
-                    broadcastWinamp();
-
-
-                    return;
-
-                }
-
-
-                /* =================================================
-                   WINAMP ACTION
-                ================================================= */
-
-                if (
-                    data.type ===
-                    "winampAction"
-                ) {
-
-                    const action =
-                        cleanWinampString(
-                            data.action,
-                            50
-                        );
-
-
-                    /*
-                     * Le serveur transmet l'action.
-                     *
-                     * Le lecteur HTML peut alors
-                     * effectuer l'action localement.
-                     */
-
-                    broadcast({
-
-                        type:
-                            "winampAction",
-
-                        action:
-                            action,
-
-                        username:
-                            currentUser.name
-
-                    });
-
-
-                    return;
-
-                }
-
-
-                /* =================================================
-                   CHAT
-                ================================================= */
-
-                if (
-                    data.type !==
                     "chat"
                 ) {
 
-                    return;
+                    const currentUser =
+                        users.get(
+                            socket
+                        );
 
-                }
+
+                    if (
+                        !currentUser
+                    ) {
+
+                        return;
+
+                    }
 
 
-                const message =
-                    String(
-                        data.message ||
-                        ""
-                    )
-                        .replace(
-                            /[<>]/g,
+                    const message =
+                        String(
+                            data.message ||
                             ""
                         )
-                        .substring(
-                            0,
-                            300
-                        )
-                        .trim();
+                            .replace(
+                                /[<>]/g,
+                                ""
+                            )
+                            .substring(
+                                0,
+                                300
+                            )
+                            .trim();
 
 
-                if (
-                    !message
-                ) {
+                    if (
+                        !message
+                    ) {
 
-                    return;
+                        return;
 
-                }
+                    }
 
 
-                /* =================================================
-                   MARLEY
-                ================================================= */
+                    /* =========================================
+                       MARLEY
+                    ========================================= */
 
-                if (
+                    if (
 
-                    message
-                        .toLowerCase()
-                        .replace(
-                            /[.!?]+$/g,
-                            ""
-                        ) ===
-                    "i love you marley"
+                        message
+                            .toLowerCase()
+                            .replace(
+                                /[.!?]+$/g,
+                                ""
+                            ) ===
+                        "i love you marley"
 
-                ) {
+                    ) {
+
+                        broadcast({
+
+                            type:
+                                "marley",
+
+                            username:
+                                currentUser.name,
+
+                            avatar:
+                                currentUser.avatar || null
+
+                        });
+
+                        return;
+
+                    }
+
+
+                    /* =========================================
+                       SAUVEGARDE
+                    ========================================= */
+
+                    saveChatMessage(
+
+                        currentUser.name,
+
+                        message,
+
+                        currentUser.avatar
+
+                    );
+
+
+                    /* =========================================
+                       ENVOI CHAT
+                    ========================================= */
 
                     broadcast({
 
                         type:
-                            "marley",
+                            "chat",
 
                         username:
                             currentUser.name,
 
                         avatar:
-                            currentUser.avatar || null
+                            currentUser.avatar ||
+                            null,
+
+                        message:
+                            message,
+
+                        timestamp:
+                            Date.now()
 
                     });
 
@@ -2887,44 +3091,13 @@ wss.on(
                 }
 
 
-                /* =================================================
-                   SAUVEGARDE
-                ================================================= */
-
-                saveChatMessage(
-
-                    currentUser.name,
-
-                    message,
-
-                    currentUser.avatar
-
-                );
-
-
-                /* =================================================
-                   ENVOI CHAT
-                ================================================= */
-
-                broadcast({
-
-                    type:
-                        "chat",
-
-                    username:
-                        currentUser.name,
-
-                    avatar:
-                        currentUser.avatar ||
-                        null,
-
-                    message:
-                        message,
-
-                    timestamp:
-                        Date.now()
-
-                });
+                /*
+                 * Le type music est normalement envoyé
+                 * par HTTP et non par WebSocket.
+                 *
+                 * On ne permet donc pas aux clients
+                 * de créer eux-mêmes des fichiers.
+                 */
 
             }
         );
@@ -3005,90 +3178,6 @@ wss.on(
 
 
 /* =====================================================
-   WINAMP POSITION SYNC
-===================================================== */
-
-/*
- * Pendant la lecture, le serveur fait avancer
- * légèrement la position.
- *
- * Cela évite que les clients restent bloqués
- * sur la même position entre deux mises à jour.
- */
-
-setInterval(
-    () => {
-
-        if (
-            !winampState.playing
-        ) {
-
-            return;
-
-        }
-
-
-        const now =
-            Date.now();
-
-
-        if (
-            winampState.updatedAt
-        ) {
-
-            const elapsed =
-                (
-                    now -
-                    winampState.updatedAt
-                ) / 1000;
-
-
-            /*
-             * On ne fait avancer que si
-             * la dernière synchronisation
-             * est raisonnable.
-             */
-
-            if (
-                elapsed > 0 &&
-                elapsed < 10
-            ) {
-
-                winampState.position +=
-                    elapsed;
-
-            }
-
-        }
-
-
-        winampState.updatedAt =
-            now;
-
-
-        if (
-            winampState.duration > 0 &&
-            winampState.position >=
-            winampState.duration
-        ) {
-
-            winampState.position =
-                winampState.duration;
-
-            winampState.playing =
-                false;
-
-        }
-
-
-        broadcastWinamp();
-
-    },
-    5000
-);
-
-
-/* =====================================================
    WEBSOCKET KEEP ALIVE
 ===================================================== */
 
@@ -3157,6 +3246,11 @@ app.use(
                 "LIMIT_FILE_SIZE"
             ) {
 
+                /*
+                 * Cette route peut être utilisée
+                 * par les médias OU la musique.
+                 */
+
                 return res.status(
                     413
                 ).json({
@@ -3209,7 +3303,15 @@ async function startServer() {
             () => {
 
                 console.log(
+                    "========================================"
+                );
+
+                console.log(
                     `Serveur lancé sur le port ${PORT}`
+                );
+
+                console.log(
+                    "========================================"
                 );
 
 
@@ -3255,7 +3357,25 @@ async function startServer() {
 
 
                 console.log(
-                    "Winamp WebSocket activé."
+                    "🎵 Dossier musique:",
+                    MUSIC_FOLDER
+                );
+
+
+                console.log(
+                    "🎵 API musique:",
+                    "/api/music"
+                );
+
+
+                console.log(
+                    "🎵 Upload musique:",
+                    "/api/music/upload"
+                );
+
+
+                console.log(
+                    "========================================"
                 );
 
             }
