@@ -89,7 +89,7 @@ const MEDIA_FOLDER =
 const CHAT_LOG_DIR =
     path.join(
         __dirname,
-        "chat_logs"
+        "site_node/chat_logs"
     );
 
 
