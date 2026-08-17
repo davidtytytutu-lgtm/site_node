@@ -12,114 +12,6 @@
 
 <style>
 
-let discoMode = false;
-
-
-
-/* =====================================================
-   DISCO MODE
-===================================================== */
-
-body.discoMode {
-
-    animation: discoRGB 2s linear infinite;
-
-}
-
-@keyframes discoRGB {
-
-    0% {
-        filter: hue-rotate(0deg);
-    }
-
-    25% {
-        filter: hue-rotate(90deg);
-    }
-
-    50% {
-        filter: hue-rotate(180deg);
-    }
-
-    75% {
-        filter: hue-rotate(270deg);
-    }
-
-    100% {
-        filter: hue-rotate(360deg);
-    }
-
-}
-
-/* =====================================================
-   DISCO MODE
-===================================================== */
-
-body.discoMode {
-
-    animation: discoColors 1.5s linear infinite;
-
-}
-
-
-body.discoMode #crt {
-
-    animation: discoCRT 1.5s linear infinite;
-
-}
-
-
-@keyframes discoColors {
-
-    0% {
-        color: #ff0000;
-        text-shadow: 0 0 5px #ff0000;
-    }
-
-    16% {
-        color: #ffff00;
-        text-shadow: 0 0 5px #ffff00;
-    }
-
-    33% {
-        color: #00ff00;
-        text-shadow: 0 0 5px #00ff00;
-    }
-
-    50% {
-        color: #00ffff;
-        text-shadow: 0 0 5px #00ffff;
-    }
-
-    66% {
-        color: #0080ff;
-        text-shadow: 0 0 5px #0080ff;
-    }
-
-    83% {
-        color: #ff00ff;
-        text-shadow: 0 0 5px #ff00ff;
-    }
-
-    100% {
-        color: #ff0000;
-        text-shadow: 0 0 5px #ff0000;
-    }
-
-}
-
-
-@keyframes discoCRT {
-
-    0% {
-        filter: hue-rotate(0deg);
-    }
-
-    100% {
-        filter: hue-rotate(360deg);
-    }
-
-}
-
 /* =====================================================
    BASE
 ===================================================== */
@@ -131,6 +23,12 @@ body.discoMode #crt {
 html,
 body {
 
+    margin: 0;
+
+    padding: 0;
+
+    min-height: 100vh;
+
     background: #020302;
 
     color: #00ff66;
@@ -140,298 +38,10 @@ body {
         monospace;
 
     overflow-x: hidden;
-
     overflow-y: auto;
-
-    min-height: 100vh;
-
+    
     text-shadow:
         0 0 4px rgba(0,255,102,.5);
-}
-
-#mediaNameInput {
-
-    width: 220px;
-
-    background: #001a08;
-
-    color: #00ff66;
-
-    border: 1px solid #00ff66;
-
-    padding: 5px 8px;
-
-    font-family:
-        "Courier New",
-        monospace;
-
-    outline: none;
-}
-
-#mediaNameInput::placeholder {
-
-    color: rgba(0,255,102,.5);
-
-}
-
-#mediaNameInput:focus {
-
-    box-shadow:
-        0 0 8px rgba(0,255,102,.3);
-
-}
-
-/* =====================================================
-   MEDIA LIGHTBOX
-===================================================== */
-
-#mediaLightbox {
-
-    position: fixed;
-
-    inset: 0;
-
-    z-index: 2000;
-
-    display: none;
-
-    align-items: center;
-
-    justify-content: center;
-
-    padding: 30px;
-
-    background:
-        rgba(0,0,0,.88);
-
-    backdrop-filter:
-        blur(5px);
-
-    cursor: zoom-out;
-}
-
-
-/* =====================================================
-   LIGHTBOX CONTENT
-===================================================== */
-
-#mediaLightboxContent {
-
-    position: relative;
-
-    max-width: 95vw;
-
-    max-height: 95vh;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border:
-        1px solid #00ff66;
-
-    background:
-        rgba(0,10,4,.96);
-
-    box-shadow:
-        0 0 30px rgba(0,255,102,.25),
-        inset 0 0 30px rgba(0,255,102,.05);
-
-    padding: 12px;
-
-    cursor: default;
-}
-
-
-/* =====================================================
-   VIEWER
-===================================================== */
-
-#mediaLightboxViewer {
-
-    max-width: 90vw;
-
-    max-height: 82vh;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    overflow: hidden;
-}
-
-
-#mediaLightboxViewer img {
-
-    display: block;
-
-    max-width: 90vw;
-
-    max-height: 82vh;
-
-    width: auto;
-
-    height: auto;
-
-    object-fit: contain;
-
-    box-shadow:
-        0 0 20px rgba(0,255,102,.15);
-}
-
-
-#mediaLightboxViewer video {
-
-    display: block;
-
-    max-width: 90vw;
-
-    max-height: 82vh;
-
-    width: auto;
-
-    height: auto;
-
-    background: #000;
-
-    box-shadow:
-        0 0 20px rgba(0,255,102,.15);
-}
-
-
-/* =====================================================
-   CLOSE BUTTON
-===================================================== */
-
-#mediaLightboxClose {
-
-    position: absolute;
-
-    top: -15px;
-
-    right: -15px;
-
-    width: 34px;
-
-    height: 34px;
-
-    border:
-        1px solid #00ff66;
-
-    background:
-        #001a08;
-
-    color:
-        #00ff66;
-
-    font-family:
-        "Courier New",
-        monospace;
-
-    font-size: 18px;
-
-    cursor: pointer;
-
-    z-index: 10;
-
-    box-shadow:
-        0 0 10px rgba(0,255,102,.3);
-}
-
-
-#mediaLightboxClose:hover {
-
-    background:
-        #00ff66;
-
-    color:
-        #001a08;
-
-}
-
-
-/* =====================================================
-   FILE NAME
-===================================================== */
-
-#mediaLightboxName {
-
-    width: 100%;
-
-    margin-top: 8px;
-
-    padding-top: 6px;
-
-    border-top:
-        1px solid rgba(0,255,102,.3);
-
-    text-align: center;
-
-    font-size: 11px;
-
-    word-break: break-all;
-
-    opacity: .8;
-}
-
-
-/* =====================================================
-   MOBILE
-===================================================== */
-
-@media (max-width: 700px) {
-
-    #mediaLightbox {
-
-        padding: 15px;
-
-    }
-
-
-    #mediaLightboxContent {
-
-        max-width: 100vw;
-
-        max-height: 95vh;
-
-        padding: 8px;
-
-    }
-
-
-    #mediaLightboxViewer {
-
-        max-width: 96vw;
-
-        max-height: 82vh;
-
-    }
-
-
-    #mediaLightboxViewer img,
-    #mediaLightboxViewer video {
-
-        max-width: 96vw;
-
-        max-height: 80vh;
-
-    }
-
-
-    #mediaLightboxClose {
-
-        top: -10px;
-
-        right: -10px;
-
-    }
-
 }
 
 
@@ -468,24 +78,6 @@ body {
         0 0 30px #000;
 }
 
-    border-radius: 4%;
-
-    transform:
-        perspective(900px)
-        scale(.985);
-
-    background:
-        radial-gradient(
-            ellipse at center,
-            rgba(0,40,15,.25),
-            rgba(0,0,0,.95)
-        );
-
-    box-shadow:
-        inset 0 0 100px rgba(0,0,0,.95),
-        inset 0 0 30px rgba(0,255,100,.08),
-        0 0 30px #000;
-}
 
 #crt::before {
 
@@ -538,6 +130,7 @@ body {
         scanMove .12s linear infinite;
 }
 
+
 @keyframes scanMove {
 
     from {
@@ -577,6 +170,7 @@ body {
     animation:
         vhsMove .15s steps(2) infinite;
 }
+
 
 @keyframes vhsMove {
 
@@ -633,9 +227,12 @@ body {
         rgbShift 3s infinite steps(2);
 }
 
+
 @keyframes rgbShift {
 
-    0%,95%,100% {
+    0%,
+    95%,
+    100% {
         transform: translateX(0);
     }
 
@@ -654,6 +251,60 @@ body {
 
 
 /* =====================================================
+   DISCO
+===================================================== */
+
+body.discoMode {
+
+    animation:
+        discoRGB 2s linear infinite;
+}
+
+
+body.discoMode #crt {
+
+    animation:
+        discoCRT 1.5s linear infinite;
+}
+
+
+@keyframes discoRGB {
+
+    0% {
+        filter: hue-rotate(0deg);
+    }
+
+    25% {
+        filter: hue-rotate(90deg);
+    }
+
+    50% {
+        filter: hue-rotate(180deg);
+    }
+
+    75% {
+        filter: hue-rotate(270deg);
+    }
+
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
+
+@keyframes discoCRT {
+
+    0% {
+        filter: hue-rotate(0deg);
+    }
+
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
+
+/* =====================================================
    BOOT
 ===================================================== */
 
@@ -663,7 +314,7 @@ body {
 
     inset: 0;
 
-    z-index: 500;
+    z-index: 5000;
 
     display: flex;
 
@@ -676,6 +327,7 @@ body {
     background: #020302;
 }
 
+
 #bootText {
 
     width: min(700px,90%);
@@ -686,6 +338,7 @@ body {
 
     white-space: pre-wrap;
 }
+
 
 #bootBar {
 
@@ -698,6 +351,7 @@ body {
     padding: 2px;
 }
 
+
 #bootProgress {
 
     height: 100%;
@@ -709,10 +363,13 @@ body {
     box-shadow:
         0 0 10px #00ff66;
 
-    transition: width .08s linear;
+    transition:
+        width .08s linear;
 }
 
+
 #bootPercent {
+
     margin-top: 10px;
 }
 
@@ -744,6 +401,7 @@ body {
 
     grid-template-rows:
         55px
+        auto
         350px
         500px
         180px;
@@ -775,6 +433,7 @@ body {
         0 0 12px rgba(0,255,102,.12);
 }
 
+
 #title {
 
     font-size: 18px;
@@ -782,8 +441,128 @@ body {
     font-weight: bold;
 }
 
+
 #connection {
+
     font-size: 13px;
+}
+
+
+/* =====================================================
+   ACCOUNT
+===================================================== */
+
+#account-panel,
+#account-profile {
+
+    border:
+        1px solid #00ff66;
+
+    padding: 15px;
+
+    background:
+        rgba(0,10,4,.82);
+
+    box-shadow:
+        inset 0 0 25px rgba(0,255,102,.04);
+}
+
+
+#account-panel {
+
+    grid-column: 1 / 4;
+
+    grid-row: 2;
+}
+
+
+#account-profile {
+
+    grid-column: 1 / 4;
+
+    grid-row: 2;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+
+#account-panel input {
+
+    display: block;
+
+    width: 100%;
+
+    max-width: 300px;
+
+    margin: 8px 0;
+
+    padding: 10px;
+
+    box-sizing: border-box;
+
+    background: #001a08;
+
+    color: #00ff66;
+
+    border:
+        1px solid #00ff66;
+
+    outline: none;
+
+    font-family:
+        "Courier New",
+        monospace;
+}
+
+
+#account-panel button,
+#account-profile button {
+
+    margin: 5px 0;
+
+    padding: 8px 14px;
+
+    cursor: pointer;
+
+    background: #001a08;
+
+    color: #00ff66;
+
+    border:
+        1px solid #00ff66;
+
+    font-family:
+        "Courier New",
+        monospace;
+}
+
+
+#account-panel button:hover,
+#account-profile button:hover {
+
+    background: #00ff66;
+
+    color: #001a08;
+}
+
+
+#account-avatar {
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    border:
+        1px solid #00ff66;
+}
+
+
+#login-error,
+#register-error {
+
+    color: red;
 }
 
 
@@ -799,7 +578,8 @@ body {
 
     min-height: 0;
 
-    border: 1px solid #00ff66;
+    border:
+        1px solid #00ff66;
 
     background:
         rgba(0,10,4,.82);
@@ -809,6 +589,7 @@ body {
     box-shadow:
         inset 0 0 25px rgba(0,255,102,.04);
 }
+
 
 .panelTitle {
 
@@ -840,8 +621,9 @@ body {
 
     grid-column: 1;
 
-    grid-row: 2;
+    grid-row: 3;
 }
+
 
 #terminalOutput {
 
@@ -863,6 +645,7 @@ body {
 
     scrollbar-width: thin;
 }
+
 
 #terminalInputLine {
 
@@ -886,6 +669,13 @@ body {
         1px solid rgba(0,255,102,.4);
 }
 
+
+#terminalPrompt {
+
+    white-space: nowrap;
+}
+
+
 #terminalInput {
 
     flex: 1;
@@ -903,6 +693,8 @@ body {
         monospace;
 
     font-size: 14px;
+
+    min-width: 0;
 }
 
 
@@ -914,8 +706,9 @@ body {
 
     grid-column: 2;
 
-    grid-row: 2;
+    grid-row: 3;
 }
+
 
 #chatMessages {
 
@@ -936,6 +729,7 @@ body {
     white-space: pre-wrap;
 }
 
+
 #chatInputLine {
 
     position: absolute;
@@ -953,6 +747,7 @@ body {
     border-top:
         1px solid rgba(0,255,102,.4);
 }
+
 
 #chatInput {
 
@@ -982,8 +777,9 @@ body {
 
     grid-column: 3;
 
-    grid-row: 2;
+    grid-row: 3;
 }
+
 
 #usersList {
 
@@ -993,6 +789,8 @@ body {
 
     height:
         calc(100% - 32px);
+
+    white-space: pre-wrap;
 }
 
 
@@ -1002,28 +800,31 @@ body {
 
 #mediaPanel {
 
-    /* Largeur : les 3 colonnes */
     grid-column: 1 / 4;
 
-    /* Hauteur : ligne 3 */
-    grid-row: 3;
+    grid-row: 4;
 
-    /* IMPORTANT : permet au contenu de bien se réduire */
     min-width: 0;
+
     min-height: 0;
 
+    height: 500px;
+
+    overflow: hidden;
 }
 
-
-/* =====================================================
-   MEDIA CONTENT
-===================================================== */
 
 #mediaContent {
 
     position: absolute;
 
-    inset: 32px 0 0 0;
+    top: 32px;
+
+    left: 0;
+
+    right: 0;
+
+    bottom: 0;
 
     display: flex;
 
@@ -1031,12 +832,9 @@ body {
 
     overflow: hidden;
 
+    min-height: 0;
 }
 
-
-/* =====================================================
-   MEDIA CONTROLS
-===================================================== */
 
 #mediaControls {
 
@@ -1054,7 +852,6 @@ body {
     flex-wrap: wrap;
 
     flex-shrink: 0;
-
 }
 
 
@@ -1070,13 +867,49 @@ body {
 }
 
 
+#mediaNameInput {
+
+    width: 220px;
+
+    background: #001a08;
+
+    color: #00ff66;
+
+    border:
+        1px solid #00ff66;
+
+    padding: 5px 8px;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    outline: none;
+}
+
+
+#mediaNameInput::placeholder {
+
+    color:
+        rgba(0,255,102,.5);
+}
+
+
+#mediaNameInput:focus {
+
+    box-shadow:
+        0 0 8px rgba(0,255,102,.3);
+}
+
+
 .mediaButton {
 
     background: #001a08;
 
     color: #00ff66;
 
-    border: 1px solid #00ff66;
+    border:
+        1px solid #00ff66;
 
     padding: 5px 10px;
 
@@ -1085,7 +918,6 @@ body {
         monospace;
 
     cursor: pointer;
-
 }
 
 
@@ -1094,7 +926,14 @@ body {
     background: #00ff66;
 
     color: #001a08;
+}
 
+
+.mediaButton:disabled {
+
+    opacity: .5;
+
+    cursor: not-allowed;
 }
 
 
@@ -1103,7 +942,6 @@ body {
     font-size: 11px;
 
     width: 100%;
-
 }
 
 
@@ -1113,10 +951,10 @@ body {
 
     height: 8px;
 
-    border: 1px solid #00ff66;
+    border:
+        1px solid #00ff66;
 
     display: none;
-
 }
 
 
@@ -1130,7 +968,6 @@ body {
 
     box-shadow:
         0 0 8px #00ff66;
-
 }
 
 
@@ -1144,25 +981,24 @@ body {
 
     min-height: 0;
 
-    overflow-y: auto;
+    overflow: visible;
 
     padding: 10px;
 
     display: grid;
 
     grid-template-columns:
-        repeat(auto-fill, minmax(180px, 1fr));
+        repeat(
+            auto-fill,
+            minmax(180px, 1fr)
+        );
 
-    grid-auto-rows: max-content;
+    grid-auto-rows:
+        max-content;
 
     gap: 10px;
-
 }
 
-
-/* =====================================================
-   MEDIA ITEM
-===================================================== */
 
 .mediaItem {
 
@@ -1175,34 +1011,29 @@ body {
 
     background:
         rgba(0,20,7,.7);
-
 }
 
 
-/* =====================================================
-   IMAGE / VIDEO
-===================================================== */
-
 .mediaPreview {
+
     display: block;
 
     width: auto;
+
     height: auto;
 
     max-width: 100%;
+
     max-height: 250px;
 
     background: #000;
 
-    margin: 0 auto 5px auto;
+    margin:
+        0 auto 5px auto;
 
     cursor: zoom-in;
 }
 
-
-/* =====================================================
-   NAME
-===================================================== */
 
 .mediaName {
 
@@ -1211,13 +1042,8 @@ body {
     word-break: break-all;
 
     margin-bottom: 4px;
-
 }
 
-
-/* =====================================================
-   INFO
-===================================================== */
 
 .mediaInfo {
 
@@ -1226,29 +1052,28 @@ body {
     opacity: .7;
 
     margin-bottom: 5px;
-
 }
 
-
-/* =====================================================
-   OPEN
-===================================================== */
 
 .mediaOpen {
 
     color: #00ff66;
 
     font-size: 10px;
-
 }
+
+
 /* =====================================================
    DIR
 ===================================================== */
 
 #dirPanel {
+
     grid-column: 3;
-    grid-row: 4;
+
+    grid-row: 5;
 }
+
 
 #dirOutput {
 
@@ -1265,6 +1090,7 @@ body {
     line-height: 1.35;
 }
 
+
 .dirLine {
 
     opacity: .8;
@@ -1272,6 +1098,7 @@ body {
     animation:
         dirAppear .2s linear;
 }
+
 
 @keyframes dirAppear {
 
@@ -1290,9 +1117,12 @@ body {
 ===================================================== */
 
 #matrixPanel {
+
     grid-column: 1 / 3;
-    grid-row: 4;
+
+    grid-row: 5;
 }
+
 
 #matrix {
 
@@ -1317,7 +1147,7 @@ body {
 
     inset: 0;
 
-    z-index: 800;
+    z-index: 8000;
 
     display: none;
 
@@ -1335,6 +1165,7 @@ body {
         );
 }
 
+
 #marleyText {
 
     font-size:
@@ -1348,39 +1179,213 @@ body {
         marleyAnim 3s ease forwards;
 }
 
+
 @keyframes marleyAnim {
 
     0% {
+
         opacity: 0;
+
         transform:
             scale(.1)
             rotate(-30deg);
     }
 
     25% {
+
         opacity: 1;
+
         transform:
             scale(1.3)
             rotate(10deg);
     }
 
     50% {
+
         transform:
             scale(1)
             rotate(-5deg);
     }
 
     75% {
+
         opacity: 1;
+
         transform:
             scale(1.1);
     }
 
     100% {
+
         opacity: 0;
+
         transform:
             scale(1.5);
     }
+}
+
+
+/* =====================================================
+   LIGHTBOX
+===================================================== */
+
+#mediaLightbox {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 10000;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 30px;
+
+    background:
+        rgba(0,0,0,.88);
+
+    backdrop-filter:
+        blur(5px);
+
+    cursor: zoom-out;
+}
+
+
+#mediaLightboxContent {
+
+    position: relative;
+
+    max-width: 95vw;
+
+    max-height: 95vh;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid #00ff66;
+
+    background:
+        rgba(0,10,4,.96);
+
+    box-shadow:
+        0 0 30px rgba(0,255,102,.25),
+        inset 0 0 30px rgba(0,255,102,.05);
+
+    padding: 12px;
+
+    cursor: default;
+}
+
+
+#mediaLightboxViewer {
+
+    max-width: 90vw;
+
+    max-height: 82vh;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+
+#mediaLightboxViewer img,
+#mediaLightboxViewer video {
+
+    display: block;
+
+    max-width: 90vw;
+
+    max-height: 82vh;
+
+    width: auto;
+
+    height: auto;
+
+    object-fit: contain;
+
+    background: #000;
+
+    box-shadow:
+        0 0 20px rgba(0,255,102,.15);
+}
+
+
+#mediaLightboxClose {
+
+    position: absolute;
+
+    top: -15px;
+
+    right: -15px;
+
+    width: 34px;
+
+    height: 34px;
+
+    border:
+        1px solid #00ff66;
+
+    background:
+        #001a08;
+
+    color:
+        #00ff66;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    z-index: 10;
+}
+
+
+#mediaLightboxClose:hover {
+
+    background:
+        #00ff66;
+
+    color:
+        #001a08;
+}
+
+
+#mediaLightboxName {
+
+    width: 100%;
+
+    margin-top: 8px;
+
+    padding-top: 6px;
+
+    border-top:
+        1px solid rgba(0,255,102,.3);
+
+    text-align: center;
+
+    font-size: 11px;
+
+    word-break: break-all;
+
+    opacity: .8;
 }
 
 
@@ -1390,60 +1395,130 @@ body {
 
 @media (max-width: 900px) {
 
-    body {
-        overflow: auto;
-    }
-
     #app {
-
-        position: relative;
-
-        min-height: 100vh;
 
         grid-template-columns:
             1fr 1fr;
 
         grid-template-rows:
             55px
+            auto
             350px
             350px
-            300px
+            500px
             300px;
-
     }
+
 
     #header {
-        grid-column: 1 / 3;
+
+        grid-column:
+            1 / 3;
     }
+
+
+    #account-panel,
+    #account-profile {
+
+        grid-column:
+            1 / 3;
+
+        grid-row: 2;
+    }
+
 
     #terminalPanel {
+
         grid-column: 1;
-        grid-row: 2;
-    }
 
-    #chatPanel {
-        grid-column: 2;
-        grid-row: 2;
-    }
-
-    #usersPanel {
-        grid-column: 1 / 3;
         grid-row: 3;
     }
 
-    #mediaPanel {
-        grid-column: 1 / 3;
+
+    #chatPanel {
+
+        grid-column: 2;
+
+        grid-row: 3;
+    }
+
+
+    #usersPanel {
+
+        grid-column:
+            1 / 3;
+
         grid-row: 4;
     }
 
-    #matrixPanel {
-        grid-column: 1;
+
+    #mediaPanel {
+
+        grid-column:
+            1 / 3;
+
         grid-row: 5;
     }
 
+
+    #matrixPanel {
+
+        grid-column: 1;
+
+        grid-row: 6;
+    }
+
+
     #dirPanel {
+
         grid-column: 2;
-        grid-row: 5;
+
+        grid-row: 6;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    #mediaLightbox {
+
+        padding: 15px;
+    }
+
+
+    #mediaLightboxContent {
+
+        max-width: 100vw;
+
+        max-height: 95vh;
+
+        padding: 8px;
+    }
+
+
+    #mediaLightboxViewer {
+
+        max-width: 96vw;
+
+        max-height: 82vh;
+    }
+
+
+    #mediaLightboxViewer img,
+    #mediaLightboxViewer video {
+
+        max-width: 96vw;
+
+        max-height: 80vh;
+    }
+
+
+    #mediaLightboxClose {
+
+        top: -10px;
+
+        right: -10px;
     }
 
 }
@@ -1452,10 +1527,20 @@ body {
 
 </head>
 
+
 <body>
 
 
+<!-- =====================================================
+     CRT
+===================================================== -->
+
 <div id="crt">
+
+
+<!-- =====================================================
+     APP
+===================================================== -->
 
 <div id="app">
 
@@ -1478,12 +1563,139 @@ body {
 
 
 <!-- =====================================================
+     COMPTE
+===================================================== -->
+
+<div id="account-panel">
+
+    <!-- LOGIN -->
+
+    <div id="login-box">
+
+        <h2>Connexion</h2>
+
+        <input
+            type="text"
+            id="login-username"
+            placeholder="Pseudo"
+            maxlength="20"
+            autocomplete="username"
+        >
+
+        <input
+            type="password"
+            id="login-password"
+            placeholder="Mot de passe"
+            autocomplete="current-password"
+        >
+
+        <button id="login-button">
+            Se connecter
+        </button>
+
+        <p id="login-error"></p>
+
+        <button id="show-register-button">
+            Créer un compte
+        </button>
+
+    </div>
+
+
+    <!-- REGISTER -->
+
+    <div
+        id="register-box"
+        style="display:none;"
+    >
+
+        <h2>Créer un compte</h2>
+
+        <input
+            type="text"
+            id="register-username"
+            placeholder="Pseudo"
+            maxlength="20"
+            autocomplete="username"
+        >
+
+        <input
+            type="password"
+            id="register-password"
+            placeholder="Mot de passe"
+            autocomplete="new-password"
+        >
+
+        <input
+            type="password"
+            id="register-password-confirm"
+            placeholder="Confirmer le mot de passe"
+            autocomplete="new-password"
+        >
+
+        <input
+            type="url"
+            id="register-avatar"
+            placeholder="URL de ton avatar (facultatif)"
+        >
+
+        <button id="register-button">
+            Créer le compte
+        </button>
+
+        <p id="register-error"></p>
+
+        <button id="show-login-button">
+            J'ai déjà un compte
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PROFIL
+===================================================== -->
+
+<div
+    id="account-profile"
+    style="display:none;"
+>
+
+    <img
+        id="account-avatar"
+        src=""
+        alt="Avatar"
+        width="64"
+        height="64"
+    >
+
+    <div>
+
+        <strong id="account-username">
+            Utilisateur
+        </strong>
+
+        <br>
+
+        <button id="logout-button">
+            Se déconnecter
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
      TERMINAL
 ===================================================== -->
 
 <div
     id="terminalPanel"
-    class="panel">
+    class="panel"
+>
 
     <div class="panelTitle">
         [ TERMINAL ]
@@ -1513,7 +1725,8 @@ body {
 
 <div
     id="chatPanel"
-    class="panel">
+    class="panel"
+>
 
     <div class="panelTitle">
         [ PROXIMITY CHAT ]
@@ -1540,7 +1753,8 @@ body {
 
 <div
     id="usersPanel"
-    class="panel">
+    class="panel"
+>
 
     <div class="panelTitle">
         [ USERS ONLINE ]
@@ -1559,7 +1773,8 @@ body {
 
 <div
     id="mediaPanel"
-    class="panel">
+    class="panel"
+>
 
     <div class="panelTitle">
         [ MEDIA // GITHUB ]
@@ -1569,29 +1784,31 @@ body {
 
         <div id="mediaControls">
 
-          <input
-             type="file"
-             id="mediaFile"
-             accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
-          >
+            <input
+                type="file"
+                id="mediaFile"
+                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
+            >
 
-          <input
-    type="text"
-    id="mediaNameInput"
-    placeholder="Nom du fichier..."
-    maxlength="100"
-    autocomplete="off"
->
-
-<button
-    class="mediaButton"
-    id="uploadButton">
-    UPLOAD
-</button>
+            <input
+                type="text"
+                id="mediaNameInput"
+                placeholder="Nom du fichier..."
+                maxlength="100"
+                autocomplete="off"
+            >
 
             <button
                 class="mediaButton"
-                id="refreshMedia">
+                id="uploadButton"
+            >
+                UPLOAD
+            </button>
+
+            <button
+                class="mediaButton"
+                id="refreshMedia"
+            >
                 REFRESH
             </button>
 
@@ -1615,29 +1832,13 @@ body {
 
 
 <!-- =====================================================
-     DIR
-===================================================== -->
-
-<div
-    id="dirPanel"
-    class="panel">
-
-    <div class="panelTitle">
-        [ DIR /S // LIVE ]
-    </div>
-
-    <div id="dirOutput"></div>
-
-</div>
-
-
-<!-- =====================================================
      MATRIX
 ===================================================== -->
 
 <div
     id="matrixPanel"
-    class="panel">
+    class="panel"
+>
 
     <div class="panelTitle">
         [ MATRIX ]
@@ -1648,8 +1849,30 @@ body {
 </div>
 
 
+<!-- =====================================================
+     DIR
+===================================================== -->
+
+<div
+    id="dirPanel"
+    class="panel"
+>
+
+    <div class="panelTitle">
+        [ DIR /S // LIVE ]
+    </div>
+
+    <div id="dirOutput"></div>
+
 </div>
+
+
 </div>
+<!-- FIN APP -->
+
+
+</div>
+<!-- FIN CRT -->
 
 
 <!-- =====================================================
@@ -1677,12 +1900,20 @@ INITIALIZING SYSTEM...
 </div>
 
 
+<!-- =====================================================
+     EFFECTS
+===================================================== -->
+
 <div id="scanlines"></div>
 
 <div id="vhs"></div>
 
 <div id="rgb-glitch"></div>
 
+
+<!-- =====================================================
+     MARLEY
+===================================================== -->
 
 <div id="marley">
 
@@ -1717,7 +1948,7 @@ INITIALIZING SYSTEM...
 <script>
 
 /* =====================================================
-   CONFIG
+   CONFIGURATION
 ===================================================== */
 
 const SERVER =
@@ -1733,15 +1964,21 @@ const API =
 
 let socket = null;
 
+let currentUser = null;
+
 let username = "";
 
 let reconnectTimer = null;
+
+let heartbeatTimer = null;
+
+let discoMode = false;
 
 let dirFiles = [];
 
 let dirIndex = 0;
 
-let discoMode = false;
+let bootFinished = false;
 
 
 /* =====================================================
@@ -1792,7 +2029,7 @@ const dirOutput =
 
 const mediaFile =
     document.getElementById("mediaFile");
-    
+
 const mediaNameInput =
     document.getElementById("mediaNameInput");
 
@@ -1813,103 +2050,85 @@ const mediaProgressBar =
 
 
 /* =====================================================
-   BOOT
+   ACCOUNT ELEMENTS
 ===================================================== */
 
-async function bootAnimation() {
+const loginBox =
+    document.getElementById("login-box");
 
-    const steps = [
+const registerBox =
+    document.getElementById("register-box");
 
-        "BOOTING...",
+const accountProfile =
+    document.getElementById("account-profile");
 
-        "CHECKING MEMORY...",
+const loginUsername =
+    document.getElementById("login-username");
 
-        "LOADING TERMINAL...",
+const loginPassword =
+    document.getElementById("login-password");
 
-        "LOADING CHAT...",
+const registerUsername =
+    document.getElementById("register-username");
 
-        "LOADING MEDIA SYSTEM...",
+const registerPassword =
+    document.getElementById("register-password");
 
-        "LOADING MATRIX...",
+const registerPasswordConfirm =
+    document.getElementById(
+        "register-password-confirm"
+    );
 
-        "LOADING FILE SYSTEM...",
+const registerAvatar =
+    document.getElementById(
+        "register-avatar"
+    );
 
-        "INITIALIZING NETWORK...",
+const loginError =
+    document.getElementById("login-error");
 
-        "マーリーを愛しています...",
+const registerError =
+    document.getElementById("register-error");
 
-        "READY."
+const accountUsername =
+    document.getElementById(
+        "account-username"
+    );
 
-    ];
-
-
-    for (
-        let i = 0;
-        i <= 100;
-        i++
-    ) {
-
-        bootProgress.style.width =
-            i + "%";
-
-        bootPercent.textContent =
-            i + "%";
-
-
-        if (
-            i % 12 === 0
-        ) {
-
-            const index =
-                Math.floor(i / 12);
-
-            bootText.textContent =
-                steps[
-                    Math.min(
-                        index,
-                        steps.length - 1
-                    )
-                ];
-
-        }
-
-
-        await new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    20
-                )
-        );
-
-    }
-
-
-    await new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                500
-            )
+const accountAvatar =
+    document.getElementById(
+        "account-avatar"
     );
 
 
-    boot.style.display =
-        "none";
+/* =====================================================
+   LIGHTBOX ELEMENTS
+===================================================== */
 
-    app.style.display =
-        "grid";
+const mediaLightbox =
+    document.getElementById(
+        "mediaLightbox"
+    );
 
+const mediaLightboxContent =
+    document.getElementById(
+        "mediaLightboxContent"
+    );
 
-    startMatrix();
+const mediaLightboxViewer =
+    document.getElementById(
+        "mediaLightboxViewer"
+    );
 
-    startInfiniteDir();
+const mediaLightboxClose =
+    document.getElementById(
+        "mediaLightboxClose"
+    );
 
-    loadMedia();
-
-    connect();
-
-}
+const mediaLightboxName =
+    document.getElementById(
+        "mediaLightboxName"
+    );
 
 
 /* =====================================================
@@ -1922,7 +2141,7 @@ function terminalPrint(text) {
         document.createElement("div");
 
     line.textContent =
-        text;
+        String(text);
 
     terminalOutput.appendChild(
         line
@@ -1930,27 +2149,23 @@ function terminalPrint(text) {
 
     terminalOutput.scrollTop =
         terminalOutput.scrollHeight;
-
 }
 
 
 /* =====================================================
-   CHAT
+   CHAT PRINT
 ===================================================== */
 
-function chatPrint(
-    user,
-    message
-) {
+function chatPrint(user, message) {
 
     const line =
         document.createElement("div");
 
     line.textContent =
         "[" +
-        user +
+        String(user || "SYSTEM") +
         "] " +
-        message;
+        String(message || "");
 
     chatMessages.appendChild(
         line
@@ -1958,34 +2173,595 @@ function chatPrint(
 
     chatMessages.scrollTop =
         chatMessages.scrollHeight;
-
 }
 
 
 /* =====================================================
-   CONNECT
+   ACCOUNT - LOGIN
+===================================================== */
+
+function showLogin() {
+
+    currentUser = null;
+
+    loginBox.style.display =
+        "block";
+
+    registerBox.style.display =
+        "none";
+
+    accountProfile.style.display =
+        "none";
+}
+
+
+/* =====================================================
+   ACCOUNT - REGISTER
+===================================================== */
+
+function showRegister() {
+
+    loginBox.style.display =
+        "none";
+
+    registerBox.style.display =
+        "block";
+
+    accountProfile.style.display =
+        "none";
+}
+
+
+/* =====================================================
+   ACCOUNT - PROFILE
+===================================================== */
+
+function showAccount(user) {
+
+    if (!user) {
+        showLogin();
+        return;
+    }
+
+    currentUser =
+        user;
+
+    username =
+        user.username || "";
+
+    loginBox.style.display =
+        "none";
+
+    registerBox.style.display =
+        "none";
+
+    accountProfile.style.display =
+        "flex";
+
+    accountUsername.textContent =
+        username;
+
+    if (user.avatar) {
+
+        accountAvatar.src =
+            user.avatar;
+
+    } else {
+
+        accountAvatar.src =
+            "https://ui-avatars.com/api/?name=" +
+            encodeURIComponent(username);
+
+    }
+
+    terminalPrompt.textContent =
+        username +
+        "@terminal:~$";
+}
+
+
+/* =====================================================
+   REGISTER
+===================================================== */
+
+document
+    .getElementById("register-button")
+    .addEventListener(
+        "click",
+        async () => {
+
+            registerError.textContent =
+                "";
+
+            const usernameValue =
+                registerUsername.value.trim();
+
+            const password =
+                registerPassword.value;
+
+            const confirm =
+                registerPasswordConfirm.value;
+
+            const avatar =
+                registerAvatar.value.trim();
+
+
+            if (!usernameValue) {
+
+                registerError.textContent =
+                    "Entre un pseudo.";
+
+                return;
+            }
+
+
+            if (!password) {
+
+                registerError.textContent =
+                    "Entre un mot de passe.";
+
+                return;
+            }
+
+
+            if (password !== confirm) {
+
+                registerError.textContent =
+                    "Les mots de passe ne correspondent pas.";
+
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        API +
+                        "/api/auth/register",
+                        {
+
+                            method:
+                                "POST",
+
+                            credentials:
+                                "include",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    username:
+                                        usernameValue,
+
+                                    password:
+                                        password,
+
+                                    avatar:
+                                        avatar
+
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Erreur inscription."
+                    );
+                }
+
+
+                if (!data.user) {
+
+                    throw new Error(
+                        "Le serveur n'a pas retourné l'utilisateur."
+                    );
+                }
+
+
+                showAccount(
+                    data.user
+                );
+
+
+                terminalPrint(
+                    "[ACCOUNT] Compte créé."
+                );
+
+
+                connect();
+
+
+            } catch (error) {
+
+                registerError.textContent =
+                    error.message;
+
+                console.error(
+                    "[ACCOUNT] Inscription:",
+                    error
+                );
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+document
+    .getElementById("login-button")
+    .addEventListener(
+        "click",
+        async () => {
+
+            loginError.textContent =
+                "";
+
+            const usernameValue =
+                loginUsername.value.trim();
+
+            const password =
+                loginPassword.value;
+
+
+            if (!usernameValue ||
+                !password) {
+
+                loginError.textContent =
+                    "Pseudo et mot de passe requis.";
+
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        API +
+                        "/api/auth/login",
+                        {
+
+                            method:
+                                "POST",
+
+                            credentials:
+                                "include",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    username:
+                                        usernameValue,
+
+                                    password:
+                                        password
+
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Erreur connexion."
+                    );
+                }
+
+
+                if (!data.user) {
+
+                    throw new Error(
+                        "Le serveur n'a pas retourné l'utilisateur."
+                    );
+                }
+
+
+                showAccount(
+                    data.user
+                );
+
+
+                terminalPrint(
+                    "[ACCOUNT] Connecté."
+                );
+
+
+                connect();
+
+
+            } catch (error) {
+
+                loginError.textContent =
+                    error.message;
+
+                console.error(
+                    "[ACCOUNT] Connexion:",
+                    error
+                );
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+document
+    .getElementById("logout-button")
+    .addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                await fetch(
+                    API +
+                    "/api/auth/logout",
+                    {
+
+                        method:
+                            "POST",
+
+                        credentials:
+                            "include"
+
+                    }
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "[ACCOUNT] Logout:",
+                    error
+                );
+
+            }
+
+
+            currentUser =
+                null;
+
+            username =
+                "";
+
+
+            if (heartbeatTimer) {
+
+                clearInterval(
+                    heartbeatTimer
+                );
+
+                heartbeatTimer =
+                    null;
+            }
+
+
+            if (reconnectTimer) {
+
+                clearTimeout(
+                    reconnectTimer
+                );
+
+                reconnectTimer =
+                    null;
+            }
+
+
+            if (socket) {
+
+                try {
+
+                    socket.close();
+
+                } catch {}
+
+                socket =
+                    null;
+            }
+
+
+            connection.textContent =
+                "● LOGIN REQUIRED";
+
+
+            showLogin();
+
+
+            terminalPrompt.textContent =
+                "guest@terminal:~$";
+
+
+            terminalPrint(
+                "[ACCOUNT] Déconnecté."
+            );
+
+        }
+    );
+
+
+/* =====================================================
+   LOGIN / REGISTER BUTTONS
+===================================================== */
+
+document
+    .getElementById(
+        "show-register-button"
+    )
+    .addEventListener(
+        "click",
+        showRegister
+    );
+
+
+document
+    .getElementById(
+        "show-login-button"
+    )
+    .addEventListener(
+        "click",
+        showLogin
+    );
+
+
+/* =====================================================
+   CHECK SESSION
+===================================================== */
+
+async function checkAccount() {
+
+    try {
+
+        const response =
+            await fetch(
+                API +
+                "/api/account/me",
+                {
+
+                    method:
+                        "GET",
+
+                    credentials:
+                        "include"
+
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            data.loggedIn &&
+            data.user
+        ) {
+
+            showAccount(
+                data.user
+            );
+
+
+            console.log(
+                "[ACCOUNT] Session active:",
+                data.user.username
+            );
+
+
+            return data.user;
+
+        }
+
+
+        showLogin();
+
+        return null;
+
+
+    } catch (error) {
+
+        console.error(
+            "[ACCOUNT] Vérification:",
+            error
+        );
+
+
+        showLogin();
+
+        return null;
+    }
+}
+
+
+/* =====================================================
+   WEBSOCKET
 ===================================================== */
 
 function connect() {
 
-    username =
-        prompt(
-            "Choisis ton username temporaire :"
+    if (
+        !currentUser ||
+        !currentUser.username
+    ) {
+
+        connection.textContent =
+            "● LOGIN REQUIRED";
+
+        return;
+    }
+
+
+    if (
+        socket &&
+        (
+            socket.readyState ===
+                WebSocket.OPEN ||
+            socket.readyState ===
+                WebSocket.CONNECTING
+        )
+    ) {
+
+        return;
+    }
+
+
+    if (reconnectTimer) {
+
+        clearTimeout(
+            reconnectTimer
         );
 
-
-    if (!username) {
-
-        username =
-            "guest";
-
+        reconnectTimer =
+            null;
     }
 
 
     username =
-        username
-            .replace(/[<>]/g, "")
-            .substring(0,20);
+        currentUser.username;
 
 
     terminalPrompt.textContent =
@@ -2001,15 +2777,31 @@ function connect() {
         "Connexion au serveur..."
     );
 
-    terminalPrint(
-        "マーリーを愛しています..."
-    );
 
-    socket =
-        new WebSocket(
-            SERVER
+    try {
+
+        socket =
+            new WebSocket(
+                SERVER
+            );
+
+    } catch (error) {
+
+        console.error(
+            "[WEBSOCKET] Création:",
+            error
         );
 
+        connection.textContent =
+            "● ERROR";
+
+        return;
+    }
+
+
+    /* =================================================
+       OPEN
+    ================================================= */
 
     socket.onopen = () => {
 
@@ -2029,186 +2821,280 @@ function connect() {
                     "join",
 
                 username:
-                    username
+                    currentUser.username
 
             })
         );
 
 
-        terminalInput.focus();
+        /* HEARTBEAT UNIQUE */
 
+        if (heartbeatTimer) {
+
+            clearInterval(
+                heartbeatTimer
+            );
+        }
+
+
+        heartbeatTimer =
+            setInterval(
+                () => {
+
+                    if (
+                        socket &&
+                        socket.readyState ===
+                            WebSocket.OPEN
+                    ) {
+
+                        try {
+
+                            socket.send(
+                                JSON.stringify({
+
+                                    type:
+                                        "ping"
+
+                                })
+                            );
+
+                        } catch (error) {
+
+                            console.error(
+                                "[HEARTBEAT]",
+                                error
+                            );
+                        }
+
+                    }
+
+                },
+                30000
+            );
+
+
+        terminalInput.focus();
     };
 
 
-    socket.onmessage = event => {
+    /* =================================================
+       MESSAGE
+    ================================================= */
 
-        let data;
+    socket.onmessage =
+        event => {
 
-        try {
+            let data;
 
-            data =
-                JSON.parse(
+
+            try {
+
+                data =
+                    JSON.parse(
+                        event.data
+                    );
+
+            } catch (error) {
+
+                console.warn(
+                    "[WEBSOCKET] Message JSON invalide:",
                     event.data
                 );
 
-        } catch {
-
-            return;
-
-        }
+                return;
+            }
 
 
-        if (
-            data.type ===
-            "system"
-        ) {
+            if (
+                data.type ===
+                "system"
+            ) {
 
-            terminalPrint(
-                "[SYSTEM] " +
-                data.message
-            );
-
-        }
-
-
-        if (
-            data.type ===
-            "join"
-        ) {
-
-            terminalPrint(
-                "[+] " +
-                data.username +
-                " vient de rejoindre."
-            );
-
-        }
+                terminalPrint(
+                    "[SYSTEM] " +
+                    data.message
+                );
+            }
 
 
-        if (
-            data.type ===
-            "leave"
-        ) {
+            if (
+                data.type ===
+                "join"
+            ) {
 
-            terminalPrint(
-                "[-] " +
-                data.username +
-                " est parti."
-            );
-
-        }
-
-
-        if (
-            data.type ===
-            "chat"
-        ) {
-
-            chatPrint(
-                data.username,
-                data.message
-            );
-
-        }
+                terminalPrint(
+                    "[+] " +
+                    data.username +
+                    " vient de rejoindre."
+                );
+            }
 
 
-        if (
-            data.type ===
-            "users"
-        ) {
+            if (
+                data.type ===
+                "leave"
+            ) {
 
-            usersList.textContent =
-                "SYSTEM: " +
-                data.users.length +
-                " USERS\n\n" +
-                data.users.join("\n");
-
-        }
-
-
-        if (
-            data.type ===
-            "marley"
-        ) {
-
-            terminalPrint(
-                "[EASTER EGG] " +
-                data.username +
-                " a trouvé quelque chose..."
-            );
-
-            marleyAnimation();
-
-        }
+                terminalPrint(
+                    "[-] " +
+                    data.username +
+                    " est parti."
+                );
+            }
 
 
-        /* NOUVEAU MEDIA */
+            if (
+                data.type ===
+                "chat"
+            ) {
 
-        if (
-            data.type ===
-            "media"
-        ) {
-
-            terminalPrint(
-                "[MEDIA] " +
-                data.username +
-                " a uploadé " +
-                data.name
-            );
-
-            addMedia(data);
-
-        }
-
-    };
+                chatPrint(
+                    data.username,
+                    data.message
+                );
+            }
 
 
-    socket.onerror = () => {
+            if (
+                data.type ===
+                "users"
+            ) {
 
-        connection.textContent =
-            "● ERROR";
-
-        terminalPrint(
-            "[ERROR] WebSocket error."
-        );
-
-    };
-
-
-    socket.onclose = () => {
-
-        connection.textContent =
-            "● OFFLINE";
-
-        terminalPrint(
-            "[SYSTEM] Connexion perdue."
-        );
+                const users =
+                    Array.isArray(data.users)
+                        ? data.users
+                        : [];
 
 
-        if (
-            !reconnectTimer
-        ) {
+                usersList.textContent =
+                    "SYSTEM: " +
+                    users.length +
+                    " USERS\n\n" +
+                    users.join("\n");
+            }
 
-            reconnectTimer =
-                setTimeout(
-                    () => {
 
-                        reconnectTimer =
-                            null;
+            if (
+                data.type ===
+                "marley"
+            ) {
 
-                        terminalPrint(
-                            "[SYSTEM] Reconnexion..."
-                        );
-
-                        connect();
-
-                    },
-                    5000
+                terminalPrint(
+                    "[EASTER EGG] " +
+                    data.username +
+                    " a trouvé quelque chose..."
                 );
 
-        }
+                marleyAnimation();
+            }
 
-    };
+
+            if (
+                data.type ===
+                "media"
+            ) {
+
+                terminalPrint(
+                    "[MEDIA] " +
+                    data.username +
+                    " a uploadé " +
+                    data.name
+                );
+
+                addMedia(data);
+            }
+
+        };
+
+
+    /* =================================================
+       ERROR
+    ================================================= */
+
+    socket.onerror =
+        error => {
+
+            console.error(
+                "[WEBSOCKET] Error:",
+                error
+            );
+
+
+            connection.textContent =
+                "● ERROR";
+
+
+            terminalPrint(
+                "[ERROR] WebSocket error."
+            );
+        };
+
+
+    /* =================================================
+       CLOSE
+    ================================================= */
+
+    socket.onclose =
+        () => {
+
+            connection.textContent =
+                "● OFFLINE";
+
+
+            if (heartbeatTimer) {
+
+                clearInterval(
+                    heartbeatTimer
+                );
+
+                heartbeatTimer =
+                    null;
+            }
+
+
+            terminalPrint(
+                "[SYSTEM] Connexion perdue."
+            );
+
+
+            socket =
+                null;
+
+
+            if (!currentUser) {
+
+                return;
+            }
+
+
+            if (!reconnectTimer) {
+
+                reconnectTimer =
+                    setTimeout(
+                        () => {
+
+                            reconnectTimer =
+                                null;
+
+
+                            if (
+                                currentUser
+                            ) {
+
+                                terminalPrint(
+                                    "[SYSTEM] Reconnexion..."
+                                );
+
+
+                                connect();
+                            }
+
+                        },
+                        5000
+                    );
+            }
+
+        };
 
 }
 
@@ -2219,14 +3105,22 @@ function connect() {
 
 function sendChat(message) {
 
+    if (!message) {
+        return;
+    }
+
+
     if (
         !socket ||
         socket.readyState !==
-        WebSocket.OPEN
+            WebSocket.OPEN
     ) {
 
-        return;
+        terminalPrint(
+            "[ERROR] Chat hors ligne."
+        );
 
+        return;
     }
 
 
@@ -2241,17 +3135,14 @@ function sendChat(message) {
 
         })
     );
-
 }
 
 
 /* =====================================================
-   TERMINAL COMMANDS
+   TERMINAL COMMAND
 ===================================================== */
 
-async function terminalCommand(
-    command
-) {
+async function terminalCommand(command) {
 
     const lower =
         command
@@ -2266,6 +3157,8 @@ async function terminalCommand(
     );
 
 
+    /* DIR */
+
     if (
         lower ===
         "dir /s"
@@ -2279,43 +3172,66 @@ async function terminalCommand(
                     "/api/files"
                 );
 
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "HTTP " +
+                    response.status
+                );
+            }
+
+
             const files =
                 await response.json();
 
 
-            files.forEach(
-                file =>
-                    terminalPrint(file)
-            );
+            if (
+                Array.isArray(files)
+            ) {
 
-        } catch {
+                files.forEach(
+                    file =>
+                        terminalPrint(file)
+                );
+
+            }
+
+        } catch (error) {
 
             terminalPrint(
                 "[ERROR] FILE SYSTEM OFFLINE."
             );
 
+            console.error(
+                "[DIR]",
+                error
+            );
         }
 
-        return;
 
+        return;
     }
 
+
+    /* MEDIA */
 
     if (
         lower ===
         "media"
     ) {
 
-        loadMedia();
+        await loadMedia();
 
         terminalPrint(
             "[MEDIA] Liste actualisée."
         );
 
         return;
-
     }
 
+
+    /* CLEAR */
 
     if (
         lower ===
@@ -2326,9 +3242,10 @@ async function terminalCommand(
             "";
 
         return;
-
     }
 
+
+    /* HELP */
 
     if (
         lower ===
@@ -2359,10 +3276,23 @@ async function terminalCommand(
             "chat <message>"
         );
 
-        return;
+        terminalPrint(
+            "disco"
+        );
 
+        terminalPrint(
+            "broken"
+        );
+
+        terminalPrint(
+            "david"
+        );
+
+        return;
     }
 
+
+    /* MARLEY */
 
     if (
         lower
@@ -2374,78 +3304,108 @@ async function terminalCommand(
         "i love you marley"
     ) {
 
-        sendChat(command);
+        sendChat(
+            command
+        );
 
         return;
-
     }
 
-if (
-    lower === "マーリーを愛しています"
-) {
-
-    marleyAnimation();
-
-    return;
-
-}
-
-if (lower === "broken") {
-
-    window.location.href =
-        "https://david-wiki.neocities.org/";
-
-    return;
-
-}
-
-
-if (lower === "david") {
-
-    window.location.href =
-        "https://www.tiktok.com/@0cherif_cat0";
-
-    return;
-
-}
-
-/* DISCO */
-
-if (
-    lower === "disco"
-) {
-
-    discoMode =
-        !discoMode;
-
-
-    document.body.classList.toggle(
-        "discoMode",
-        discoMode
-    );
-
-
-    if (discoMode) {
-
-        terminalPrint(
-            "[EASTER EGG] 🌈 DISCO MODE ON 🌈"
-        );
-
-    } else {
-
-        terminalPrint(
-            "[EASTER EGG] DISCO MODE OFF."
-        );
-
-    }
-
-
-    return;
-
-}
 
     if (
-        lower.startsWith("chat ")
+        lower ===
+        "マーリーを愛しています"
+    ) {
+
+        marleyAnimation();
+
+        return;
+    }
+
+
+    /* BROKEN */
+
+    if (
+    lower ===
+    "broken"
+    ) {
+
+    window.open(
+        "https://david-wiki.neocities.org/",
+        "_blank",
+        "noopener,noreferrer"
+    );
+
+    terminalPrint(
+        "[EASTER EGG] Ouverture de DAVID WIKI..."
+    );
+
+    return;
+    }
+
+
+    /* DAVID */
+
+    if (
+    lower ===
+    "david"
+    ) {
+
+    window.open(
+        "https://www.tiktok.com/@0cherif_cat0",
+        "_blank",
+        "noopener,noreferrer"
+    );
+
+    terminalPrint(
+        "[EASTER EGG] Ouverture du profil DAVID..."
+    );
+
+    return;
+    } 
+
+
+    /* DISCO */
+
+    if (
+        lower ===
+        "disco"
+    ) {
+
+        discoMode =
+            !discoMode;
+
+
+        document.body.classList.toggle(
+            "discoMode",
+            discoMode
+        );
+
+
+        if (discoMode) {
+
+            terminalPrint(
+                "[EASTER EGG] 🌈 DISCO MODE ON 🌈"
+            );
+
+        } else {
+
+            terminalPrint(
+                "[EASTER EGG] DISCO MODE OFF."
+            );
+        }
+
+
+        return;
+    }
+
+
+    /* CHAT */
+
+    if (
+        lower.startsWith(
+            "chat "
+        )
     ) {
 
         sendChat(
@@ -2453,17 +3413,19 @@ if (
         );
 
         return;
-
     }
 
 
-    sendChat(command);
+    /* COMMANDE NORMALE */
 
+    sendChat(
+        command
+    );
 }
 
 
 /* =====================================================
-   INPUTS
+   TERMINAL INPUT
 ===================================================== */
 
 terminalInput.addEventListener(
@@ -2471,44 +3433,64 @@ terminalInput.addEventListener(
     event => {
 
         if (
-            event.key !== "Enter"
-        )
+            event.key !==
+            "Enter"
+        ) {
+
             return;
+        }
 
 
         const command =
             terminalInput.value.trim();
 
 
-        terminalInput.value = "";
+        terminalInput.value =
+            "";
 
 
-        if (command)
-            terminalCommand(command);
+        if (command) {
+
+            terminalCommand(
+                command
+            );
+        }
 
     }
 );
 
+
+/* =====================================================
+   CHAT INPUT
+===================================================== */
 
 chatInput.addEventListener(
     "keydown",
     event => {
 
         if (
-            event.key !== "Enter"
-        )
+            event.key !==
+            "Enter"
+        ) {
+
             return;
+        }
 
 
         const message =
             chatInput.value.trim();
 
 
-        chatInput.value = "";
+        chatInput.value =
+            "";
 
 
-        if (message)
-            sendChat(message);
+        if (message) {
+
+            sendChat(
+                message
+            );
+        }
 
     }
 );
@@ -2520,100 +3502,118 @@ chatInput.addEventListener(
 
 function formatSize(bytes) {
 
-    if (bytes < 1024)
-        return bytes + " B";
+    if (!Number.isFinite(bytes)) {
+        return "0 B";
+    }
 
-    if (bytes < 1024 * 1024)
+
+    if (
+        bytes <
+        1024
+    ) {
+
         return (
-            (bytes / 1024).toFixed(1)
-            + " KB"
+            Math.round(bytes) +
+            " B"
         );
+    }
+
+
+    if (
+        bytes <
+        1024 * 1024
+    ) {
+
+        return (
+            (bytes / 1024)
+                .toFixed(1) +
+            " KB"
+        );
+    }
+
 
     return (
-        (bytes / 1024 / 1024).toFixed(2)
-        + " MB"
+        (bytes / 1024 / 1024)
+            .toFixed(2) +
+        " MB"
     );
-
 }
 
 
+/* =====================================================
+   VIDEO DETECTION
+===================================================== */
+
 function isVideo(file) {
 
+    if (!file) {
+        return false;
+    }
+
+
     const name =
-        file.name.toLowerCase();
+        String(
+            file.name ||
+            file.url ||
+            ""
+        ).toLowerCase();
+
 
     return (
         name.endsWith(".mp4") ||
         name.endsWith(".webm") ||
         name.endsWith(".mov")
     );
-
 }
 
 
 /* =====================================================
-   MEDIA LIGHTBOX
-===================================================== */
-
-const mediaLightbox =
-    document.getElementById(
-        "mediaLightbox"
-    );
-
-const mediaLightboxContent =
-    document.getElementById(
-        "mediaLightboxContent"
-    );
-
-const mediaLightboxViewer =
-    document.getElementById(
-        "mediaLightboxViewer"
-    );
-
-const mediaLightboxClose =
-    document.getElementById(
-        "mediaLightboxClose"
-    );
-
-const mediaLightboxName =
-    document.getElementById(
-        "mediaLightboxName"
-    );
-
-
-/* =====================================================
-   OPEN LIGHTBOX
+   LIGHTBOX OPEN
 ===================================================== */
 
 function openMediaLightbox(file) {
 
+    if (!file || !file.url) {
+        return;
+    }
+
+
     mediaLightboxViewer.innerHTML =
         "";
 
+
     mediaLightboxName.textContent =
-        file.name || "MEDIA";
+        file.name ||
+        "MEDIA";
 
 
     let viewer;
 
 
-    if (isVideo(file)) {
+    if (
+        isVideo(file)
+    ) {
 
-    preview =
-        document.createElement(
-            "video"
-        );
+        viewer =
+            document.createElement(
+                "video"
+            );
 
-    preview.controls = true;
 
-    preview.preload = "metadata";
+        viewer.controls =
+            true;
 
-    preview.playsInline = true;
+        viewer.preload =
+            "metadata";
 
-    // 🔊 Son activé par défaut
-    preview.muted = false;
+        viewer.playsInline =
+            true;
 
-    preview.volume = 2.0;
+        viewer.muted =
+            false;
+
+        viewer.volume =
+            1;
 
     } else {
 
@@ -2622,9 +3622,10 @@ function openMediaLightbox(file) {
                 "img"
             );
 
-        viewer.alt =
-            file.name || "MEDIA";
 
+        viewer.alt =
+            file.name ||
+            "MEDIA";
     }
 
 
@@ -2643,15 +3644,11 @@ function openMediaLightbox(file) {
 
     document.body.style.overflow =
         "hidden";
-
-
-    
-
 }
 
 
 /* =====================================================
-   CLOSE LIGHTBOX
+   LIGHTBOX CLOSE
 ===================================================== */
 
 function closeMediaLightbox() {
@@ -2671,7 +3668,6 @@ function closeMediaLightbox() {
         );
 
         video.load();
-
     }
 
 
@@ -2685,12 +3681,11 @@ function closeMediaLightbox() {
 
     document.body.style.overflow =
         "";
-
 }
 
 
 /* =====================================================
-   CLOSE BUTTON
+   LIGHTBOX EVENTS
 ===================================================== */
 
 mediaLightboxClose.addEventListener(
@@ -2698,10 +3693,6 @@ mediaLightboxClose.addEventListener(
     closeMediaLightbox
 );
 
-
-/* =====================================================
-   CLICK OUTSIDE
-===================================================== */
 
 mediaLightbox.addEventListener(
     "click",
@@ -2713,29 +3704,24 @@ mediaLightbox.addEventListener(
         ) {
 
             closeMediaLightbox();
-
         }
 
     }
 );
 
-
-/* =====================================================
-   ESCAPE
-===================================================== */
 
 document.addEventListener(
     "keydown",
     event => {
 
         if (
-            event.key === "Escape" &&
+            event.key ===
+                "Escape" &&
             mediaLightbox.style.display ===
-            "flex"
+                "flex"
         ) {
 
             closeMediaLightbox();
-
         }
 
     }
@@ -2743,61 +3729,88 @@ document.addEventListener(
 
 
 /* =====================================================
-   MEDIA DISPLAY
+   ADD MEDIA
 ===================================================== */
 
 function addMedia(file) {
 
+    if (!file) {
+        return;
+    }
+
+
     const mediaPath =
         file.path ||
-        file.name;
+        file.name ||
+        file.url;
 
 
-    if (
+    if (!mediaPath) {
+        return;
+    }
+
+
+    const existing =
         document.querySelector(
-            `[data-media-path="${CSS.escape(mediaPath)}"]`
-        )
-    ) {
+            `[data-media-path="${CSS.escape(
+                String(mediaPath)
+            )}"]`
+        );
+
+
+    if (existing) {
         return;
     }
 
 
     const item =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     item.className =
         "mediaItem";
 
+
     item.dataset.mediaPath =
-        mediaPath;
+        String(mediaPath);
 
 
     let preview;
 
 
-    /* =========================
-       VIDEO MP4 / WEBM / MOV
-    ========================= */
+    /* VIDEO */
 
-    if (isVideo(file)) {
+    if (
+        isVideo(file)
+    ) {
 
         preview =
-            document.createElement("video");
+            document.createElement(
+                "video"
+            );
+
 
         preview.className =
             "mediaPreview";
 
+
         preview.src =
             file.url;
+
 
         preview.controls =
             true;
 
+
         preview.preload =
             "metadata";
 
+
         preview.playsInline =
             true;
+
 
         preview.muted =
             true;
@@ -2805,30 +3818,31 @@ function addMedia(file) {
     }
 
 
-    /* =========================
-       IMAGE / GIF / WEBP
-    ========================= */
+    /* IMAGE */
 
     else {
 
         preview =
-            document.createElement("img");
+            document.createElement(
+                "img"
+            );
+
 
         preview.className =
             "mediaPreview";
 
+
         preview.src =
             file.url;
 
-        preview.alt =
-            file.name;
 
+        preview.alt =
+            file.name ||
+            "MEDIA";
     }
 
 
-    /* =========================
-       OPEN LIGHTBOX
-    ========================= */
+    /* DOUBLE CLICK LIGHTBOX */
 
     preview.addEventListener(
         "dblclick",
@@ -2836,84 +3850,93 @@ function addMedia(file) {
 
             event.preventDefault();
 
-            openMediaLightbox(file);
+            openMediaLightbox(
+                file
+            );
 
         }
     );
 
 
-    preview.style.cursor =
-        "zoom-in";
-
-
-    /* =========================
-       NAME
-    ========================= */
+    /* NAME */
 
     const name =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     name.className =
         "mediaName";
 
+
     name.textContent =
-        file.name;
+        file.name ||
+        "MEDIA";
 
 
-    /* =========================
-       INFO
-    ========================= */
+    /* INFO */
 
     const info =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     info.className =
         "mediaInfo";
 
+
     info.textContent =
         formatSize(
-            file.size || 0
+            Number(file.size) || 0
         );
 
 
-    /* =========================
-       OPEN LINK
-    ========================= */
+    /* LINK */
 
     const link =
-        document.createElement("a");
+        document.createElement(
+            "a"
+        );
+
 
     link.className =
         "mediaOpen";
 
+
     link.href =
         file.url;
+
 
     link.target =
         "_blank";
 
+
     link.rel =
-        "noopener";
+        "noopener noreferrer";
+
 
     link.textContent =
         "[ OPEN ]";
 
 
-    /* =========================
-       APPEND
-    ========================= */
+    /* APPEND */
 
     item.appendChild(
         preview
     );
 
+
     item.appendChild(
         name
     );
 
+
     item.appendChild(
         info
     );
+
 
     item.appendChild(
         link
@@ -2923,8 +3946,8 @@ function addMedia(file) {
     mediaList.prepend(
         item
     );
-
 }
+
 
 /* =====================================================
    LOAD MEDIA
@@ -2933,49 +3956,56 @@ function addMedia(file) {
 async function loadMedia() {
 
     if (!mediaList) {
-        console.error("[MEDIA] mediaList introuvable.");
         return;
     }
+
 
     try {
 
         mediaStatus.textContent =
             "LOADING MEDIA...";
 
+
         const response =
             await fetch(
-                API + "/api/media"
+                API +
+                "/api/media"
             );
+
 
         if (!response.ok) {
 
             throw new Error(
-                "HTTP " + response.status
+                "HTTP " +
+                response.status
             );
-
         }
+
 
         const files =
             await response.json();
+
+
+        if (
+            !Array.isArray(files)
+        ) {
+
+            throw new Error(
+                "Réponse serveur invalide."
+            );
+        }
 
 
         mediaList.innerHTML =
             "";
 
 
-        if (!Array.isArray(files)) {
-
-            throw new Error(
-                "Réponse serveur invalide."
-            );
-
-        }
-
-
         files.forEach(
             file => {
 
-                addMedia(file);
+                addMedia(
+                    file
+                );
 
             }
         );
@@ -2990,16 +4020,78 @@ async function loadMedia() {
     } catch (error) {
 
         console.error(
-            "[MEDIA] Erreur chargement :",
+            "[MEDIA] Erreur chargement:",
             error
         );
 
+
         mediaStatus.textContent =
             "[ERROR] MEDIA SYSTEM OFFLINE.";
-
     }
-
 }
+
+
+/* =====================================================
+   CHAT HISTORY
+===================================================== */
+
+async function loadChatHistory() {
+
+    try {
+
+        const response =
+            await fetch(
+                API +
+                "/api/chat-history"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+        }
+
+
+        const messages =
+            await response.json();
+
+
+        if (
+            !Array.isArray(messages)
+        ) {
+
+            return;
+        }
+
+
+        chatMessages.innerHTML =
+            "";
+
+
+        messages.forEach(
+            message => {
+
+                chatPrint(
+                    message.username,
+                    message.message
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[CHAT] Erreur historique:",
+            error
+        );
+    }
+}
+
 
 /* =====================================================
    UPLOAD
@@ -3019,12 +4111,13 @@ uploadButton.addEventListener(
                 "[ERROR] SELECT A FILE.";
 
             return;
-
         }
 
 
         const MAX =
-            25 * 1024 * 1024;
+            25 *
+            1024 *
+            1024;
 
 
         if (
@@ -3036,104 +4129,112 @@ uploadButton.addEventListener(
                 "[ERROR] MAXIMUM 25 MB.";
 
             return;
-
         }
-
-
 
 
         let customName =
-    mediaNameInput.value.trim();
+            mediaNameInput.value.trim();
 
-if (!customName) {
 
-    customName =
-        file.name.replace(
-            /\.[^/.]+$/,
-            ""
+        if (!customName) {
+
+            customName =
+                file.name.replace(
+                    /\.[^/.]+$/,
+                    ""
+                );
+        }
+
+
+        customName =
+            customName
+                .replace(
+                    /[<>:"/\\|?*\x00-\x1F]/g,
+                    ""
+                )
+                .replace(
+                    /\s+/g,
+                    " "
+                )
+                .trim()
+                .substring(
+                    0,
+                    100
+                );
+
+
+        if (!customName) {
+
+            mediaStatus.textContent =
+                "[ERROR] INVALID FILE NAME.";
+
+            return;
+        }
+
+
+        const extension =
+            file.name.includes(".")
+                ? "." +
+                    file.name
+                        .split(".")
+                        .pop()
+                        .toLowerCase()
+                : "";
+
+
+        const finalName =
+            customName +
+            extension;
+
+
+        const renamedFile =
+            new File(
+                [file],
+                finalName,
+                {
+                    type:
+                        file.type
+                }
+            );
+
+
+        const form =
+            new FormData();
+
+
+        form.append(
+            "file",
+            renamedFile
         );
 
-}
 
+        form.append(
+            "username",
+            currentUser?.username ||
+            username ||
+            "guest"
+        );
 
-/* Nettoyage du nom */
-
-customName =
-    customName
-        .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .substring(0, 100);
-
-
-if (!customName) {
-
-    mediaStatus.textContent =
-        "[ERROR] INVALID FILE NAME.";
-
-    return;
-
-}
-
-
-/* Garder l'extension originale */
-
-const extension =
-    file.name.includes(".")
-        ? "." +
-          file.name
-              .split(".")
-              .pop()
-              .toLowerCase()
-        : "";
-
-
-const finalName =
-    customName +
-    extension;
-
-
-/* Créer le fichier avec le nouveau nom */
-
-const renamedFile =
-    new File(
-        [file],
-        finalName,
-        {
-            type: file.type
-        }
-    );
-
-
-const form =
-    new FormData();
-
-
-form.append(
-    "file",
-    renamedFile
-);
-
-form.append(
-    "username",
-    username
-);
 
         const xhr =
             new XMLHttpRequest();
 
-
         xhr.open(
-            "POST",
-            API + "/api/upload"
+          "POST",
+          API +
+          "/api/upload"
         );
+
+        xhr.withCredentials = true;
 
 
         mediaProgress.style.display =
             "block";
 
+
         mediaProgressBar.style.width =
             "0%";
+
 
         uploadButton.disabled =
             true;
@@ -3146,8 +4247,12 @@ form.append(
         xhr.upload.onprogress =
             event => {
 
-                if (!event.lengthComputable)
+                if (
+                    !event.lengthComputable
+                ) {
+
                     return;
+                }
 
 
                 const percent =
@@ -3159,14 +4264,14 @@ form.append(
 
 
                 mediaProgressBar.style.width =
-                    percent + "%";
+                    percent +
+                    "%";
 
 
                 mediaStatus.textContent =
                     "UPLOADING... " +
                     percent +
                     "%";
-
             };
 
 
@@ -3179,6 +4284,7 @@ form.append(
 
                 let data;
 
+
                 try {
 
                     data =
@@ -3188,8 +4294,8 @@ form.append(
 
                 } catch {
 
-                    data = {};
-
+                    data =
+                        {};
                 }
 
 
@@ -3206,22 +4312,31 @@ form.append(
                     addMedia({
 
                         name:
-                            data.name,
+                            data.name ||
+                            finalName,
 
                         url:
                             data.url,
 
                         size:
-                            data.size,
+                            data.size ||
+                            file.size,
 
                         path:
                             "uploaded/" +
-                            data.name
+                            (
+                                data.name ||
+                                finalName
+                            )
 
                     });
 
 
                     mediaFile.value =
+                        "";
+
+
+                    mediaNameInput.value =
                         "";
 
 
@@ -3233,7 +4348,6 @@ form.append(
                             data.error ||
                             "UPLOAD FAILED."
                         );
-
                 }
 
             };
@@ -3245,9 +4359,9 @@ form.append(
                 uploadButton.disabled =
                     false;
 
+
                 mediaStatus.textContent =
                     "[ERROR] NETWORK ERROR.";
-
             };
 
 
@@ -3267,23 +4381,21 @@ form.append(
             };
 
 
-        xhr.send(form);
+        xhr.send(
+            form
+        );
 
     }
 );
 
 
 /* =====================================================
-   REFRESH
+   REFRESH MEDIA
 ===================================================== */
 
 refreshMedia.addEventListener(
     "click",
-    () => {
-
-        loadMedia();
-
-    }
+    loadMedia
 );
 
 
@@ -3312,7 +4424,6 @@ function marleyAnimation() {
         },
         3000
     );
-
 }
 
 
@@ -3327,8 +4438,37 @@ function startMatrix() {
             "matrix"
         );
 
+
+    if (!canvas) {
+        return;
+    }
+
+
     const ctx =
-        canvas.getContext("2d");
+        canvas.getContext(
+            "2d"
+        );
+
+
+    if (!ctx) {
+        return;
+    }
+
+
+    const chars =
+        "01#$%アイウエオ親愛なるプラウト愛してるよ、マーリー";
+
+
+    const fontSize =
+        12;
+
+
+    let columns =
+        0;
+
+
+    let drops =
+        [];
 
 
     function resize() {
@@ -3336,9 +4476,25 @@ function startMatrix() {
         canvas.width =
             canvas.clientWidth;
 
+
         canvas.height =
             canvas.clientHeight;
 
+
+        columns =
+            Math.max(
+                1,
+                Math.floor(
+                    canvas.width /
+                    fontSize
+                )
+            );
+
+
+        drops =
+            new Array(
+                columns
+            ).fill(1);
     }
 
 
@@ -3351,32 +4507,12 @@ function startMatrix() {
     );
 
 
-    const chars =
-        "01#$%アイウエオ親愛なるプラウト愛してるよ、マーリー";
-
-
-    const fontSize =
-        12;
-
-
-    let columns =
-        Math.floor(
-            canvas.width /
-            fontSize
-        );
-
-
-    let drops =
-        new Array(
-            columns
-        ).fill(1);
-
-
     setInterval(
         () => {
 
             ctx.fillStyle =
                 "rgba(0,0,0,.08)";
+
 
             ctx.fillRect(
                 0,
@@ -3388,6 +4524,7 @@ function startMatrix() {
 
             ctx.fillStyle =
                 "#00ff66";
+
 
             ctx.font =
                 fontSize +
@@ -3413,36 +4550,34 @@ function startMatrix() {
                     char,
                     i * fontSize,
                     drops[i] *
-                    fontSize
+                        fontSize
                 );
 
 
                 if (
                     drops[i] *
-                    fontSize >
-                    canvas.height &&
+                        fontSize >
+                        canvas.height &&
                     Math.random() >
-                    .975
+                        .975
                 ) {
 
-                    drops[i] = 0;
-
+                    drops[i] =
+                        0;
                 }
 
 
                 drops[i]++;
-
             }
 
         },
         45
     );
-
 }
 
 
 /* =====================================================
-   INFINITE DIR
+   DIR FILES
 ===================================================== */
 
 async function loadDirFiles() {
@@ -3456,8 +4591,33 @@ async function loadDirFiles() {
             );
 
 
-        dirFiles =
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+        }
+
+
+        const files =
             await response.json();
+
+
+        if (
+            Array.isArray(files)
+        ) {
+
+            dirFiles =
+                files;
+
+        } else {
+
+            throw new Error(
+                "Invalid files response"
+            );
+        }
+
 
     } catch {
 
@@ -3472,14 +4632,15 @@ async function loadDirFiles() {
             "C:\\USERS\\GUEST\\DATA.DAT",
 
             "C:\\NETWORK\\SOCKET.WS"
-          
 
         ];
-
     }
-
 }
 
+
+/* =====================================================
+   INFINITE DIR
+===================================================== */
 
 async function startInfiniteDir() {
 
@@ -3488,8 +4649,10 @@ async function startInfiniteDir() {
 
     if (
         !dirFiles.length
-    )
+    ) {
+
         return;
+    }
 
 
     setInterval(
@@ -3533,22 +4696,155 @@ async function startInfiniteDir() {
                 dirOutput.removeChild(
                     dirOutput.firstChild
                 );
-
             }
 
         },
         250
     );
-
 }
 
 
-
 /* =====================================================
-   START
+   BOOT ANIMATION
 ===================================================== */
 
-bootAnimation();
+async function bootAnimation() {
+
+    const steps = [
+
+        "BOOTING...",
+
+        "CHECKING MEMORY...",
+
+        "LOADING TERMINAL...",
+
+        "LOADING CHAT...",
+
+        "LOADING MEDIA SYSTEM...",
+
+        "LOADING MATRIX...",
+
+        "LOADING FILE SYSTEM...",
+
+        "INITIALIZING NETWORK...",
+
+        "マーリーを愛しています...",
+
+        "READY."
+
+    ];
+
+
+    for (
+        let i = 0;
+        i <= 100;
+        i++
+    ) {
+
+        bootProgress.style.width =
+            i +
+            "%";
+
+
+        bootPercent.textContent =
+            i +
+            "%";
+
+
+        const index =
+            Math.min(
+                Math.floor(
+                    i /
+                    10
+                ),
+                steps.length - 1
+            );
+
+
+        bootText.textContent =
+            steps[index];
+
+
+        await new Promise(
+            resolve =>
+                setTimeout(
+                    resolve,
+                    20
+                )
+        );
+    }
+
+
+    await new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                500
+            )
+    );
+
+
+    boot.style.display =
+        "none";
+
+
+    app.style.display =
+        "grid";
+
+
+    bootFinished =
+        true;
+
+
+    startMatrix();
+
+    startInfiniteDir();
+
+    await loadMedia();
+
+    await loadChatHistory();
+
+
+    if (currentUser) {
+
+        connect();
+
+    } else {
+
+        connection.textContent =
+            "● LOGIN REQUIRED";
+
+        terminalPrint(
+            "[SYSTEM] Connecte-toi pour accéder au réseau."
+        );
+    }
+
+
+    terminalInput.focus();
+}
+
+
+/* =====================================================
+   INITIALISATION
+===================================================== */
+
+(async function init() {
+
+    /*
+     * Vérification de session AVANT
+     * le démarrage du réseau.
+     */
+
+    await checkAccount();
+
+
+    /*
+     * Puis démarrage de l'interface.
+     */
+
+    bootAnimation();
+
+})();
 
 </script>
 
