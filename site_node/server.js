@@ -2368,14 +2368,11 @@ app.delete(
 
 
 /* =====================================================
-   CHAT LOGS JSON
+   CHAT LOG — GITHUB JSON
 ===================================================== */
 
-const CHAT_LOG_DIR =
-    path.join(
-        __dirname,
-        "chat_logs"
-    );
+const CHAT_LOG_FOLDER =
+    "site_node/chat_logs";
 
 const CHAT_LOG_MAX_SIZE =
     10 * 1024 * 1024; // 10 Mo
@@ -2385,66 +2382,96 @@ const CHAT_HISTORY_LIMIT =
 
 
 /* =====================================================
-   CRÉATION DU DOSSIER
+   GITHUB CHAT LOG CACHE
 ===================================================== */
 
-function ensureChatLogDirectory() {
+/*
+ * Cache temporaire en mémoire du dernier fichier.
+ *
+ * Le fichier réel reste sur GitHub.
+ * Le cache évite de télécharger le même fichier
+ * à chaque nouveau message.
+ */
 
-    if (
-        !fs.existsSync(
-            CHAT_LOG_DIR
-        )
-    ) {
+let chatLogCache = {
 
-        fs.mkdirSync(
-            CHAT_LOG_DIR,
-            {
-                recursive: true
-            }
-        );
+    path: null,
 
-        console.log(
-            "📁 Dossier chat_logs créé."
-        );
+    sha: null,
 
-    }
+    messages: []
+
+};
+
+
+/* =====================================================
+   NETTOYAGE NOM FICHIER
+===================================================== */
+
+function chatLogFilename(
+    number
+) {
+
+    return `chat_${String(
+        number
+    ).padStart(
+        4,
+        "0"
+    )}.json`;
 
 }
 
 
 /* =====================================================
-   LISTE DES FICHIERS JSON
+   RÉCUPÉRER LES FICHIERS CHAT SUR GITHUB
 ===================================================== */
 
-function getChatLogFiles() {
-
-    ensureChatLogDirectory();
+async function getChatLogFiles() {
 
     try {
 
-        return fs
-            .readdirSync(
-                CHAT_LOG_DIR
-            )
+        const data =
+            await githubRequest(
+
+                `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${CHAT_LOG_FOLDER}?ref=${encodeURIComponent(
+                    GITHUB_BRANCH
+                )}`
+
+            );
+
+
+        if (
+            !Array.isArray(data)
+        ) {
+
+            return [];
+
+        }
+
+
+        return data
+
             .filter(
                 file =>
+                    file.type === "file" &&
                     /^chat_\d+\.json$/i.test(
-                        file
+                        file.name
                     )
             )
+
             .sort(
                 (a, b) => {
 
                     const numberA =
                         parseInt(
-                            a.match(
+                            a.name.match(
                                 /\d+/
                             )[0]
                         );
 
                     const numberB =
                         parseInt(
-                            b.match(
+                            b.name.match(
                                 /\d+/
                             )[0]
                         );
@@ -2456,12 +2483,27 @@ function getChatLogFiles() {
 
     } catch (error) {
 
+        /*
+         * Si le dossier n'existe pas encore,
+         * GitHub renvoie généralement 404.
+         */
+
+        if (
+            error.message &&
+            error.message.includes("Not Found")
+        ) {
+
+            return [];
+
+        }
+
+
         console.error(
-            "Erreur lecture chat_logs:",
+            "Erreur récupération logs GitHub:",
             error.message
         );
 
-        return [];
+        throw error;
 
     }
 
@@ -2469,215 +2511,411 @@ function getChatLogFiles() {
 
 
 /* =====================================================
-   NUMÉRO DU PROCHAIN FICHIER
+   CRÉER LE PREMIER FICHIER CHAT
 ===================================================== */
 
-function getNextChatLogNumber() {
-
-    const files =
-        getChatLogFiles();
-
-    if (
-        !files.length
-    ) {
-
-        return 1;
-
-    }
-
-    const numbers =
-        files.map(
-            file =>
-                parseInt(
-                    file.match(
-                        /\d+/
-                    )[0]
-                )
-        );
-
-    return (
-        Math.max(
-            ...numbers
-        ) + 1
-    );
-
-}
-
-
-/* =====================================================
-   CRÉER UN NOUVEAU LOG
-===================================================== */
-
-function createChatLogFile(
+async function createChatLogFile(
     number
 ) {
 
-    ensureChatLogDirectory();
-
     const filename =
-        `chat_${String(
+        chatLogFilename(
             number
-        ).padStart(
-            4,
-            "0"
-        )}.json`;
-
-    const filePath =
-        path.join(
-            CHAT_LOG_DIR,
-            filename
         );
 
-    if (
-        !fs.existsSync(
-            filePath
-        )
-    ) {
+    const githubPath =
+        `${CHAT_LOG_FOLDER}/${filename}`;
 
-        fs.writeFileSync(
-            filePath,
-            "[]",
-            "utf8"
+
+    const content =
+        JSON.stringify(
+            [],
+            null,
+            2
         );
 
-        console.log(
-            `📄 Nouveau fichier de chat créé : ${filename}`
+
+    const result =
+        await githubRequest(
+
+            `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${githubPath}`,
+
+            {
+
+                method:
+                    "PUT",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json"
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        message:
+                            `Create chat log ${filename}`,
+
+                        content:
+                            Buffer
+                                .from(
+                                    content,
+                                    "utf8"
+                                )
+                                .toString(
+                                    "base64"
+                                ),
+
+                        branch:
+                            GITHUB_BRANCH
+
+                    })
+
+            }
+
         );
 
-    }
 
-    return filePath;
+    console.log(
+        `📄 Nouveau fichier GitHub créé : ${githubPath}`
+    );
+
+
+    return {
+
+        path:
+            githubPath,
+
+        sha:
+            result.content?.sha ||
+            null,
+
+        messages:
+            []
+
+    };
 
 }
 
 
 /* =====================================================
-   OBTENIR LE DERNIER LOG
+   LIRE UN LOG GITHUB
 ===================================================== */
 
-function getLastChatLog() {
+async function readChatLogFile(
+    file
+) {
+
+    try {
+
+        const data =
+            await githubRequest(
+
+                `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${file.path}?ref=${encodeURIComponent(
+                    GITHUB_BRANCH
+                )}`
+
+            );
+
+
+        let messages = [];
+
+
+        if (
+            data.content
+        ) {
+
+            const decoded =
+                Buffer
+                    .from(
+                        data.content.replace(
+                            /\n/g,
+                            ""
+                        ),
+                        "base64"
+                    )
+                    .toString(
+                        "utf8"
+                    );
+
+
+            if (
+                decoded.trim()
+            ) {
+
+                try {
+
+                    const parsed =
+                        JSON.parse(
+                            decoded
+                        );
+
+
+                    if (
+                        Array.isArray(
+                            parsed
+                        )
+                    ) {
+
+                        messages =
+                            parsed;
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        `JSON invalide dans ${file.name}:`,
+                        error.message
+                    );
+
+                    messages = [];
+
+                }
+
+            }
+
+        }
+
+
+        return {
+
+            path:
+                file.path,
+
+            sha:
+                data.sha,
+
+            messages:
+                messages
+
+        };
+
+    } catch (error) {
+
+        console.error(
+            `Erreur lecture ${file.name}:`,
+            error.message
+        );
+
+        return {
+
+            path:
+                file.path,
+
+            sha:
+                file.sha || null,
+
+            messages:
+                []
+
+        };
+
+    }
+
+}
+
+
+/* =====================================================
+   OBTENIR LE DERNIER FICHIER
+===================================================== */
+
+async function getLastChatLog() {
 
     const files =
-        getChatLogFiles();
+        await getChatLogFiles();
+
+
+    /*
+     * Aucun fichier.
+     * On crée chat_0001.json.
+     */
 
     if (
         !files.length
     ) {
 
-        return createChatLogFile(
+        return await createChatLogFile(
             1
         );
 
     }
 
-    return path.join(
-        CHAT_LOG_DIR,
+
+    const lastFile =
         files[
             files.length - 1
-        ]
-    );
+        ];
+
+
+    /*
+     * Utilisation du cache si possible.
+     */
+
+    if (
+        chatLogCache.path ===
+        lastFile.path &&
+        chatLogCache.sha ===
+        lastFile.sha
+    ) {
+
+        return {
+
+            path:
+                chatLogCache.path,
+
+            sha:
+                chatLogCache.sha,
+
+            messages:
+                chatLogCache.messages
+
+        };
+
+    }
+
+
+    const log =
+        await readChatLogFile(
+            lastFile
+        );
+
+
+    chatLogCache = {
+
+        path:
+            log.path,
+
+        sha:
+            log.sha,
+
+        messages:
+            log.messages
+
+    };
+
+
+    return log;
 
 }
 
 
 /* =====================================================
-   LIRE UN FICHIER JSON
+   SAUVEGARDER UN LOG SUR GITHUB
 ===================================================== */
 
-function readChatLog(
-    filePath
+async function saveChatLogToGitHub(
+    filePath,
+    messages,
+    sha,
+    commitMessage
 ) {
 
-    try {
-
-        if (
-            !fs.existsSync(
-                filePath
-            )
-        ) {
-
-            return [];
-
-        }
-
-        const stats =
-            fs.statSync(
-                filePath
-            );
-
-        /*
-         * Fichier vide
-         */
-
-        if (
-            stats.size === 0
-        ) {
-
-            fs.writeFileSync(
-                filePath,
-                "[]",
-                "utf8"
-            );
-
-            return [];
-
-        }
-
-
-        const content =
-            fs.readFileSync(
-                filePath,
-                "utf8"
-            ).trim();
-
-
-        if (
-            !content
-        ) {
-
-            fs.writeFileSync(
-                filePath,
-                "[]",
-                "utf8"
-            );
-
-            return [];
-
-        }
-
-
-        const data =
-            JSON.parse(
-                content
-            );
-
-
-        if (
-            !Array.isArray(
-                data
-            )
-        ) {
-
-            console.warn(
-                `⚠️ ${path.basename(filePath)} ne contient pas un tableau JSON.`
-            );
-
-            return [];
-
-        }
-
-        return data;
-
-    } catch (error) {
-
-        console.error(
-            `Erreur lecture ${path.basename(filePath)}:`,
-            error.message
+    const content =
+        JSON.stringify(
+            messages,
+            null,
+            2
         );
 
-        return [];
+
+    const encoded =
+        Buffer
+            .from(
+                content,
+                "utf8"
+            )
+            .toString(
+                "base64"
+            );
+
+
+    const body = {
+
+        message:
+            commitMessage,
+
+        content:
+            encoded,
+
+        branch:
+            GITHUB_BRANCH
+
+    };
+
+
+    /*
+     * Pour modifier un fichier existant,
+     * GitHub exige son SHA.
+     */
+
+    if (
+        sha
+    ) {
+
+        body.sha =
+            sha;
 
     }
+
+
+    const result =
+        await githubRequest(
+
+            `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${filePath}`,
+
+            {
+
+                method:
+                    "PUT",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json"
+
+                },
+
+                body:
+                    JSON.stringify(
+                        body
+                    )
+
+            }
+
+        );
+
+
+    const newSha =
+        result.content?.sha ||
+        null;
+
+
+    chatLogCache = {
+
+        path:
+            filePath,
+
+        sha:
+            newSha,
+
+        messages:
+            messages
+
+    };
+
+
+    return {
+
+        sha:
+            newSha,
+
+        content:
+            content
+
+    };
 
 }
 
@@ -2686,26 +2924,13 @@ function readChatLog(
    SAUVEGARDE MESSAGE
 ===================================================== */
 
-function saveChatMessage(
+async function saveChatMessage(
     username,
     message,
     avatar = null
 ) {
 
     try {
-
-        ensureChatLogDirectory();
-
-
-        let filePath =
-            getLastChatLog();
-
-
-        let messages =
-            readChatLog(
-                filePath
-            );
-
 
         const chatMessage = {
 
@@ -2724,10 +2949,32 @@ function saveChatMessage(
         };
 
 
+        /*
+         * Récupération du dernier fichier.
+         */
+
+        let log =
+            await getLastChatLog();
+
+
+        let messages =
+            Array.isArray(
+                log.messages
+            )
+                ? [
+                    ...log.messages
+                ]
+                : [];
+
+
         messages.push(
             chatMessage
         );
 
+
+        /*
+         * Calcul de la nouvelle taille.
+         */
 
         let content =
             JSON.stringify(
@@ -2737,26 +2984,62 @@ function saveChatMessage(
             );
 
 
-        /*
-         * Vérification de la taille
-         */
-
-        if (
+        const size =
             Buffer.byteLength(
                 content,
                 "utf8"
-            ) >
+            );
+
+
+        /*
+         * Si le fichier dépasse 10 Mo,
+         * on crée le suivant.
+         */
+
+        if (
+            size >
             CHAT_LOG_MAX_SIZE
         ) {
 
-            const nextNumber =
-                getNextChatLogNumber();
+            const files =
+                await getChatLogFiles();
 
 
-            filePath =
-                createChatLogFile(
+            let nextNumber =
+                1;
+
+
+            if (
+                files.length
+            ) {
+
+                const numbers =
+                    files.map(
+                        file =>
+                            parseInt(
+                                file.name.match(
+                                    /\d+/
+                                )[0]
+                            )
+                    );
+
+
+                nextNumber =
+                    Math.max(
+                        ...numbers
+                    ) + 1;
+
+            }
+
+
+            const newLog =
+                await createChatLogFile(
                     nextNumber
                 );
+
+
+            log =
+                newLog;
 
 
             messages = [
@@ -2771,25 +3054,57 @@ function saveChatMessage(
                     2
                 );
 
+
+            /*
+             * Sauvegarde dans le nouveau fichier.
+             */
+
+            await saveChatLogToGitHub(
+
+                log.path,
+
+                messages,
+
+                log.sha,
+
+                `Add message to ${path.basename(
+                    log.path
+                )}`
+
+            );
+
+        } else {
+
+            /*
+             * Modification du fichier actuel.
+             */
+
+            await saveChatLogToGitHub(
+
+                log.path,
+
+                messages,
+
+                log.sha,
+
+                `Add message to ${path.basename(
+                    log.path
+                )}`
+
+            );
+
         }
 
 
-        fs.writeFileSync(
-            filePath,
-            content,
-            "utf8"
-        );
-
-
         console.log(
-            `💬 Message sauvegardé dans ${path.basename(filePath)}`
+            `💬 Message sauvegardé sur GitHub : ${log.path}`
         );
 
 
     } catch (error) {
 
         console.error(
-            "❌ Erreur sauvegarde chat:",
+            "❌ Erreur sauvegarde chat GitHub:",
             error
         );
 
@@ -2802,108 +3117,120 @@ function saveChatMessage(
    HISTORIQUE PROGRESSIF
 ===================================================== */
 
-function loadChatHistory(
+async function loadChatHistory(
     limit = CHAT_HISTORY_LIMIT
 ) {
 
-    ensureChatLogDirectory();
+    try {
+
+        const files =
+            await getChatLogFiles();
 
 
-    const files =
-        getChatLogFiles();
+        if (
+            !files.length
+        ) {
+
+            return [];
+
+        }
 
 
-    if (
-        !files.length
-    ) {
+        const history = [];
+
+
+        /*
+         * On commence par le fichier
+         * le plus récent.
+         *
+         * On ne télécharge donc pas
+         * inutilement tous les anciens logs.
+         */
+
+        for (
+            let i =
+                files.length - 1;
+
+            i >= 0;
+
+            i--
+        ) {
+
+            const log =
+                await readChatLogFile(
+                    files[i]
+                );
+
+
+            if (
+                Array.isArray(
+                    log.messages
+                )
+            ) {
+
+                history.unshift(
+                    ...log.messages
+                );
+
+            }
+
+
+            /*
+             * Dès qu'on possède suffisamment
+             * de messages, on arrête.
+             */
+
+            if (
+                history.length >=
+                limit
+            ) {
+
+                break;
+
+            }
+
+        }
+
+
+        /*
+         * Seulement les derniers messages.
+         */
+
+        if (
+            history.length >
+            limit
+        ) {
+
+            return history.slice(
+                -limit
+            );
+
+        }
+
+
+        return history;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Erreur chargement historique:",
+            error
+        );
 
         return [];
 
     }
-
-
-    const history = [];
-
-
-    /*
-     * On commence par le fichier
-     * le plus récent.
-     *
-     * Cela évite de charger inutilement
-     * tout l'historique.
-     */
-
-    for (
-        let i = files.length - 1;
-        i >= 0;
-        i--
-    ) {
-
-        const filePath =
-            path.join(
-                CHAT_LOG_DIR,
-                files[i]
-            );
-
-
-        const messages =
-            readChatLog(
-                filePath
-            );
-
-
-        /*
-         * Ajout au début afin de
-         * conserver l'ordre chronologique.
-         */
-
-        history.unshift(
-            ...messages
-        );
-
-
-        /*
-         * On a suffisamment de messages.
-         */
-
-        if (
-            history.length >= limit
-        ) {
-
-            break;
-
-        }
-
-    }
-
-
-    /*
-     * Seulement les derniers messages.
-     */
-
-    if (
-        history.length > limit
-    ) {
-
-        return history.slice(
-            -limit
-        );
-
-    }
-
-
-    return history;
 
 }
 /* =====================================================
    SAVE CHAT MESSAGE
 ===================================================== */
 
-function saveChatMessage(
-    username,
+function await saveChatMessage(
+    currentUser.name,
     message,
-    avatar = null
-) {
+    currentUser.avatar
+);
 
     try {
 
@@ -3435,8 +3762,8 @@ wss.on(
         ================================================= */
 
         socket.on(
-            "message",
-            raw => {
+    "message",
+    async raw => {
 
                 let data;
 
