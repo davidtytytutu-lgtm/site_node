@@ -59,7 +59,6 @@ if (!process.env.DATABASE_URL) {
 
 }
 
-
 const pool =
     new Pool({
 
@@ -157,7 +156,6 @@ const PgSession =
         session
     );
 
-
 const sessionMiddleware =
     session({
 
@@ -207,7 +205,6 @@ const sessionMiddleware =
 
     });
 
-
 app.use(
     sessionMiddleware
 );
@@ -241,11 +238,23 @@ server.on(
     "upgrade",
     (request, socket, head) => {
 
-        const pathname =
-            new URL(
-                request.url,
-                `http://${request.headers.host}`
-            ).pathname;
+        let pathname;
+
+        try {
+
+            pathname =
+                new URL(
+                    request.url,
+                    `http://${request.headers.host}`
+                ).pathname;
+
+        } catch {
+
+            socket.destroy();
+
+            return;
+
+        }
 
 
         if (
@@ -321,7 +330,6 @@ async function initializeDatabase() {
         );
 
     `);
-
 
     console.log(
         "Table users OK."
@@ -471,6 +479,7 @@ function getCurrentUser(
 
     }
 
+
     return {
 
         id:
@@ -551,7 +560,12 @@ app.post(
             avatar =
                 String(
                     avatar || ""
-                ).trim();
+                )
+                    .trim()
+                    .substring(
+                        0,
+                        500
+                    );
 
 
             if (
@@ -1128,6 +1142,33 @@ app.put(
                 result.rows[0].avatar_url;
 
 
+            /*
+             * Mise à jour de l'avatar
+             * pour les connexions WebSocket
+             * déjà ouvertes.
+             */
+
+            for (
+                const [
+                    ws,
+                    user
+                ]
+                of users.entries()
+            ) {
+
+                if (
+                    user.id ===
+                    req.session.userId
+                ) {
+
+                    user.avatar =
+                        result.rows[0].avatar_url;
+
+                }
+
+            }
+
+
             res.json({
 
                 success:
@@ -1592,7 +1633,8 @@ if (
     fs.mkdirSync(
         CHAT_LOG_DIR,
         {
-            recursive: true
+            recursive:
+                true
         }
     );
 
@@ -1616,10 +1658,14 @@ function getChatLogFiles() {
             .sort(
                 (a, b) =>
                     parseInt(
-                        a.match(/\d+/)[0]
+                        a.match(
+                            /\d+/
+                        )[0]
                     ) -
                     parseInt(
-                        b.match(/\d+/)[0]
+                        b.match(
+                            /\d+/
+                        )[0]
                     )
             );
 
@@ -1652,11 +1698,17 @@ function getLastChatLog() {
 
     return path.join(
         CHAT_LOG_DIR,
-        files[files.length - 1]
+        files[
+            files.length - 1
+        ]
     );
 
 }
 
+
+/* =====================================================
+   SAVE CHAT MESSAGE
+===================================================== */
 
 function saveChatMessage(
     username,
@@ -1669,7 +1721,9 @@ function saveChatMessage(
         let filePath =
             getLastChatLog();
 
+
         let messages = [];
+
 
         if (
             fs.existsSync(
@@ -1694,6 +1748,7 @@ function saveChatMessage(
             }
 
         }
+
 
         const chatMessage = {
 
@@ -1711,135 +1766,6 @@ function saveChatMessage(
 
         };
 
-        messages.push(
-            chatMessage
-        );
-
-        const content =
-            JSON.stringify(
-                messages,
-                null,
-                2
-            );
-
-        if (
-            Buffer.byteLength(
-                content,
-                "utf8"
-            ) >
-            CHAT_LOG_MAX_SIZE
-        ) {
-
-            const files =
-                getChatLogFiles();
-
-            const nextNumber =
-                files.length
-                    ? Math.max(
-                        ...files.map(
-                            file =>
-                                parseInt(
-                                    file.match(
-                                        /\d+/
-                                    )[0]
-                                )
-                        )
-                    ) + 1
-                    : 1;
-
-            filePath =
-                path.join(
-                    CHAT_LOG_DIR,
-                    `chat_${String(
-                        nextNumber
-                    ).padStart(
-                        4,
-                        "0"
-                    )}.json`
-                );
-
-            fs.writeFileSync(
-
-                filePath,
-
-                JSON.stringify(
-                    [chatMessage],
-                    null,
-                    2
-                ),
-
-                "utf8"
-
-            );
-
-        } else {
-
-            fs.writeFileSync(
-                filePath,
-                content,
-                "utf8"
-            );
-
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Erreur sauvegarde chat:",
-            error.message
-        );
-
-    }
-
-}
-
-    try {
-
-        let filePath =
-            getLastChatLog();
-
-
-        let messages = [];
-
-
-        if (
-            fs.existsSync(
-                filePath
-            )
-        ) {
-
-            try {
-
-                messages =
-                    JSON.parse(
-                        fs.readFileSync(
-                            filePath,
-                            "utf8"
-                        )
-                    );
-
-            } catch {
-
-                messages = [];
-
-            }
-
-        }
-
-
-        const chatMessage = {
-
-            username:
-                username,
-
-            message:
-                message,
-
-            timestamp:
-                Date.now()
-
-        };
-
 
         messages.push(
             chatMessage
@@ -1898,7 +1824,9 @@ function saveChatMessage(
                 filePath,
 
                 JSON.stringify(
-                    [chatMessage],
+                    [
+                        chatMessage
+                    ],
                     null,
                     2
                 ),
@@ -1910,9 +1838,13 @@ function saveChatMessage(
         } else {
 
             fs.writeFileSync(
+
                 filePath,
+
                 content,
+
                 "utf8"
+
             );
 
         }
@@ -1928,6 +1860,10 @@ function saveChatMessage(
 
 }
 
+
+/* =====================================================
+   LOAD CHAT HISTORY
+===================================================== */
 
 function loadChatHistory(
     limit = 100
@@ -2008,10 +1944,9 @@ app.get(
 );
 
 
-/*
- * Alias pour garder compatible
- * avec ton ancien HTML.
- */
+/* =====================================================
+   CHAT HISTORY ALIAS
+===================================================== */
 
 app.get(
     "/api/chat/history",
@@ -2066,6 +2001,10 @@ function broadcast(
 }
 
 
+/* =====================================================
+   SEND USERS
+===================================================== */
+
 function sendUsers() {
 
     broadcast({
@@ -2077,8 +2016,18 @@ function sendUsers() {
             [
                 ...users.values()
             ].map(
-                user =>
-                    user.name
+                user => ({
+
+                    id:
+                        user.id,
+
+                    name:
+                        user.name,
+
+                    avatar:
+                        user.avatar || null
+
+                })
             )
 
     });
@@ -2087,7 +2036,7 @@ function sendUsers() {
 
 
 /* =====================================================
-   WEBSOCKET
+   WEBSOCKET CONNECTION
 ===================================================== */
 
 wss.on(
@@ -2114,9 +2063,9 @@ wss.on(
         );
 
 
-        /*
-         * Vérification de session
-         */
+        /* =================================================
+           VÉRIFICATION SESSION
+        ================================================= */
 
         if (
             !request.session ||
@@ -2168,6 +2117,10 @@ wss.on(
         );
 
 
+        /* =================================================
+           BIENVENUE
+        ================================================= */
+
         socket.send(
             JSON.stringify({
 
@@ -2180,6 +2133,10 @@ wss.on(
             })
         );
 
+
+        /* =================================================
+           HISTORIQUE
+        ================================================= */
 
         socket.send(
             JSON.stringify({
@@ -2196,13 +2153,20 @@ wss.on(
         );
 
 
+        /* =================================================
+           JOIN
+        ================================================= */
+
         broadcast({
 
             type:
                 "join",
 
             username:
-                username
+                username,
+
+            avatar:
+                user.avatar || null
 
         }, socket);
 
@@ -2285,9 +2249,9 @@ wss.on(
                 }
 
 
-                /* =========================
+                /* =================================================
                    MARLEY
-                ========================= */
+                ================================================= */
 
                 if (
 
@@ -2307,46 +2271,54 @@ wss.on(
                             "marley",
 
                         username:
-                            currentUser.name
+                            currentUser.name,
+
+                        avatar:
+                            currentUser.avatar || null
 
                     });
-
 
                     return;
 
                 }
 
 
-                /* =========================
-                   SAVE
-                ========================= */
+                /* =================================================
+                   SAUVEGARDE
+                ================================================= */
 
                 saveChatMessage(
-                currentUser.name,
-                message,
-                currentUser.avatar
+
+                    currentUser.name,
+
+                    message,
+
+                    currentUser.avatar
+
                 );
 
-                /* =========================
-                   CHAT
-                ========================= */
+
+                /* =================================================
+                   ENVOI CHAT
+                ================================================= */
 
                 broadcast({
 
-                type:
-                    "chat",
+                    type:
+                        "chat",
 
-               username:
-                currentUser.name,
+                    username:
+                        currentUser.name,
 
-                avatar:
-                currentUser.avatar,
+                    avatar:
+                        currentUser.avatar ||
+                        null,
 
-                message:
-                message,
+                    message:
+                        message,
 
-                timestamp:
-                Date.now()
+                    timestamp:
+                        Date.now()
 
                 });
 
@@ -2370,8 +2342,11 @@ wss.on(
 
                 if (
                     !user
-                )
+                ) {
+
                     return;
+
+                }
 
 
                 users.delete(
@@ -2385,7 +2360,11 @@ wss.on(
                         "leave",
 
                     username:
-                        user.name
+                        user.name,
+
+                    avatar:
+                        user.avatar ||
+                        null
 
                 });
 
@@ -2400,6 +2379,10 @@ wss.on(
             }
         );
 
+
+        /* =================================================
+           ERROR
+        ================================================= */
 
         socket.on(
             "error",
@@ -2523,7 +2506,7 @@ app.use(
 
 
 /* =====================================================
-   START
+   START SERVER
 ===================================================== */
 
 async function startServer() {
