@@ -2368,7 +2368,7 @@ app.delete(
 
 
 /* =====================================================
-   CHAT LOG
+   CHAT LOGS JSON
 ===================================================== */
 
 const CHAT_LOG_DIR =
@@ -2377,29 +2377,48 @@ const CHAT_LOG_DIR =
         "chat_logs"
     );
 
-
 const CHAT_LOG_MAX_SIZE =
-    10 * 1024 * 1024;
+    10 * 1024 * 1024; // 10 Mo
+
+const CHAT_HISTORY_LIMIT =
+    100;
 
 
-if (
-    !fs.existsSync(
-        CHAT_LOG_DIR
-    )
-) {
+/* =====================================================
+   CRÉATION DU DOSSIER
+===================================================== */
 
-    fs.mkdirSync(
-        CHAT_LOG_DIR,
-        {
-            recursive:
-                true
-        }
-    );
+function ensureChatLogDirectory() {
+
+    if (
+        !fs.existsSync(
+            CHAT_LOG_DIR
+        )
+    ) {
+
+        fs.mkdirSync(
+            CHAT_LOG_DIR,
+            {
+                recursive: true
+            }
+        );
+
+        console.log(
+            "📁 Dossier chat_logs créé."
+        );
+
+    }
 
 }
 
 
+/* =====================================================
+   LISTE DES FICHIERS JSON
+===================================================== */
+
 function getChatLogFiles() {
+
+    ensureChatLogDirectory();
 
     try {
 
@@ -2409,25 +2428,38 @@ function getChatLogFiles() {
             )
             .filter(
                 file =>
-                    /^chat_\d+\.json$/.test(
+                    /^chat_\d+\.json$/i.test(
                         file
                     )
             )
             .sort(
-                (a, b) =>
-                    parseInt(
-                        a.match(
-                            /\d+/
-                        )[0]
-                    ) -
-                    parseInt(
-                        b.match(
-                            /\d+/
-                        )[0]
-                    )
+                (a, b) => {
+
+                    const numberA =
+                        parseInt(
+                            a.match(
+                                /\d+/
+                            )[0]
+                        );
+
+                    const numberB =
+                        parseInt(
+                            b.match(
+                                /\d+/
+                            )[0]
+                        );
+
+                    return numberA - numberB;
+
+                }
             );
 
-    } catch {
+    } catch (error) {
+
+        console.error(
+            "Erreur lecture chat_logs:",
+            error.message
+        );
 
         return [];
 
@@ -2436,23 +2468,107 @@ function getChatLogFiles() {
 }
 
 
-function getLastChatLog() {
+/* =====================================================
+   NUMÉRO DU PROCHAIN FICHIER
+===================================================== */
+
+function getNextChatLogNumber() {
 
     const files =
         getChatLogFiles();
-
 
     if (
         !files.length
     ) {
 
-        return path.join(
+        return 1;
+
+    }
+
+    const numbers =
+        files.map(
+            file =>
+                parseInt(
+                    file.match(
+                        /\d+/
+                    )[0]
+                )
+        );
+
+    return (
+        Math.max(
+            ...numbers
+        ) + 1
+    );
+
+}
+
+
+/* =====================================================
+   CRÉER UN NOUVEAU LOG
+===================================================== */
+
+function createChatLogFile(
+    number
+) {
+
+    ensureChatLogDirectory();
+
+    const filename =
+        `chat_${String(
+            number
+        ).padStart(
+            4,
+            "0"
+        )}.json`;
+
+    const filePath =
+        path.join(
             CHAT_LOG_DIR,
-            "chat_0001.json"
+            filename
+        );
+
+    if (
+        !fs.existsSync(
+            filePath
+        )
+    ) {
+
+        fs.writeFileSync(
+            filePath,
+            "[]",
+            "utf8"
+        );
+
+        console.log(
+            `📄 Nouveau fichier de chat créé : ${filename}`
         );
 
     }
 
+    return filePath;
+
+}
+
+
+/* =====================================================
+   OBTENIR LE DERNIER LOG
+===================================================== */
+
+function getLastChatLog() {
+
+    const files =
+        getChatLogFiles();
+
+    if (
+        !files.length
+    ) {
+
+        return createChatLogFile(
+            1
+        );
+
+    }
 
     return path.join(
         CHAT_LOG_DIR,
@@ -2464,6 +2580,321 @@ function getLastChatLog() {
 }
 
 
+/* =====================================================
+   LIRE UN FICHIER JSON
+===================================================== */
+
+function readChatLog(
+    filePath
+) {
+
+    try {
+
+        if (
+            !fs.existsSync(
+                filePath
+            )
+        ) {
+
+            return [];
+
+        }
+
+        const stats =
+            fs.statSync(
+                filePath
+            );
+
+        /*
+         * Fichier vide
+         */
+
+        if (
+            stats.size === 0
+        ) {
+
+            fs.writeFileSync(
+                filePath,
+                "[]",
+                "utf8"
+            );
+
+            return [];
+
+        }
+
+
+        const content =
+            fs.readFileSync(
+                filePath,
+                "utf8"
+            ).trim();
+
+
+        if (
+            !content
+        ) {
+
+            fs.writeFileSync(
+                filePath,
+                "[]",
+                "utf8"
+            );
+
+            return [];
+
+        }
+
+
+        const data =
+            JSON.parse(
+                content
+            );
+
+
+        if (
+            !Array.isArray(
+                data
+            )
+        ) {
+
+            console.warn(
+                `⚠️ ${path.basename(filePath)} ne contient pas un tableau JSON.`
+            );
+
+            return [];
+
+        }
+
+        return data;
+
+    } catch (error) {
+
+        console.error(
+            `Erreur lecture ${path.basename(filePath)}:`,
+            error.message
+        );
+
+        return [];
+
+    }
+
+}
+
+
+/* =====================================================
+   SAUVEGARDE MESSAGE
+===================================================== */
+
+function saveChatMessage(
+    username,
+    message,
+    avatar = null
+) {
+
+    try {
+
+        ensureChatLogDirectory();
+
+
+        let filePath =
+            getLastChatLog();
+
+
+        let messages =
+            readChatLog(
+                filePath
+            );
+
+
+        const chatMessage = {
+
+            username:
+                username,
+
+            avatar:
+                avatar || null,
+
+            message:
+                message,
+
+            timestamp:
+                Date.now()
+
+        };
+
+
+        messages.push(
+            chatMessage
+        );
+
+
+        let content =
+            JSON.stringify(
+                messages,
+                null,
+                2
+            );
+
+
+        /*
+         * Vérification de la taille
+         */
+
+        if (
+            Buffer.byteLength(
+                content,
+                "utf8"
+            ) >
+            CHAT_LOG_MAX_SIZE
+        ) {
+
+            const nextNumber =
+                getNextChatLogNumber();
+
+
+            filePath =
+                createChatLogFile(
+                    nextNumber
+                );
+
+
+            messages = [
+                chatMessage
+            ];
+
+
+            content =
+                JSON.stringify(
+                    messages,
+                    null,
+                    2
+                );
+
+        }
+
+
+        fs.writeFileSync(
+            filePath,
+            content,
+            "utf8"
+        );
+
+
+        console.log(
+            `💬 Message sauvegardé dans ${path.basename(filePath)}`
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ Erreur sauvegarde chat:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   HISTORIQUE PROGRESSIF
+===================================================== */
+
+function loadChatHistory(
+    limit = CHAT_HISTORY_LIMIT
+) {
+
+    ensureChatLogDirectory();
+
+
+    const files =
+        getChatLogFiles();
+
+
+    if (
+        !files.length
+    ) {
+
+        return [];
+
+    }
+
+
+    const history = [];
+
+
+    /*
+     * On commence par le fichier
+     * le plus récent.
+     *
+     * Cela évite de charger inutilement
+     * tout l'historique.
+     */
+
+    for (
+        let i = files.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const filePath =
+            path.join(
+                CHAT_LOG_DIR,
+                files[i]
+            );
+
+
+        const messages =
+            readChatLog(
+                filePath
+            );
+
+
+        /*
+         * Ajout au début afin de
+         * conserver l'ordre chronologique.
+         */
+
+        history.unshift(
+            ...messages
+        );
+
+
+        /*
+         * On a suffisamment de messages.
+         */
+
+        if (
+            history.length >= limit
+        ) {
+
+            break;
+
+        }
+
+    }
+
+
+    /*
+     * Seulement les derniers messages.
+     */
+
+    if (
+        history.length > limit
+    ) {
+
+        return history.slice(
+            -limit
+        );
+
+    }
+
+
+    return history;
+
+}
 /* =====================================================
    SAVE CHAT MESSAGE
 ===================================================== */
@@ -2703,6 +3134,44 @@ app.get(
 
 
 /* =====================================================
+   CHAT HISTORY API
+===================================================== */
+
+app.get(
+    "/api/chat-history",
+    (req, res) => {
+
+        try {
+
+            res.json(
+                loadChatHistory(
+                    100
+                )
+            );
+
+        } catch (error) {
+
+            console.error(
+                "CHAT HISTORY:",
+                error
+            );
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    "Impossible de charger l'historique."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
    CHAT HISTORY ALIAS
 ===================================================== */
 
@@ -2710,16 +3179,34 @@ app.get(
     "/api/chat/history",
     (req, res) => {
 
-        res.json(
-            loadChatHistory(
-                100
-            )
-        );
+        try {
+
+            res.json(
+                loadChatHistory(
+                    100
+                )
+            );
+
+        } catch (error) {
+
+            console.error(
+                "CHAT HISTORY ALIAS:",
+                error
+            );
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    "Impossible de charger l'historique."
+
+            });
+
+        }
 
     }
 );
-
-
 /* =====================================================
    BROADCAST
 ===================================================== */
