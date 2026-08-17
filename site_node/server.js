@@ -2,31 +2,64 @@ const http = require("http");
 const express = require("express");
 const WebSocket = require("ws");
 const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 
+
+/* =====================================================
+   CORS
+===================================================== */
+
 app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
+
+    res.setHeader(
+        "Access-Control-Allow-Origin",
+        "*"
+    );
+
     res.setHeader(
         "Access-Control-Allow-Methods",
         "GET, POST, OPTIONS"
     );
+
     res.setHeader(
         "Access-Control-Allow-Headers",
         "Content-Type"
     );
 
     if (req.method === "OPTIONS") {
+
         return res.sendStatus(204);
+
     }
 
     next();
+
 });
 
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
 
-const users = new Map();
+/* =====================================================
+   SERVER
+===================================================== */
+
+const server =
+    http.createServer(app);
+
+const wss =
+    new WebSocket.Server({
+        server
+    });
+
+
+/* =====================================================
+   USERS
+===================================================== */
+
+const users =
+    new Map();
+
 
 /* =====================================================
    GITHUB CONFIG
@@ -42,16 +75,66 @@ const GITHUB_REPO =
     process.env.GITHUB_REPO;
 
 const GITHUB_BRANCH =
-    process.env.GITHUB_BRANCH || "main";
+    process.env.GITHUB_BRANCH ||
+    "main";
 
-const MEDIA_FOLDER = "media";
+const MEDIA_FOLDER =
+    "media";
+
+
+/* =====================================================
+   CHAT HISTORY CONFIG
+===================================================== */
+
+const CHAT_LOG_DIR =
+    path.join(
+        __dirname,
+        "chat_logs"
+    );
+
+
+const CHAT_LOG_MAX_SIZE =
+    10 * 1024 * 1024;
+
+
+/* =====================================================
+   CREATE CHAT LOG DIRECTORY
+===================================================== */
+
+try {
+
+    if (
+        !fs.existsSync(
+            CHAT_LOG_DIR
+        )
+    ) {
+
+        fs.mkdirSync(
+            CHAT_LOG_DIR,
+            {
+                recursive: true
+            }
+        );
+
+    }
+
+} catch (error) {
+
+    console.error(
+        "Impossible de créer chat_logs:",
+        error.message
+    );
+
+}
 
 
 /* =====================================================
    UPLOAD CONFIG
 ===================================================== */
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
+const MAX_FILE_SIZE =
+    25 * 1024 * 1024;
+
 
 const ALLOWED_TYPES = [
 
@@ -66,37 +149,47 @@ const ALLOWED_TYPES = [
 
 ];
 
-const upload = multer({
 
-    storage: multer.memoryStorage(),
+const upload =
+    multer({
 
-    limits: {
-        fileSize: MAX_FILE_SIZE
-    },
+        storage:
+            multer.memoryStorage(),
 
-    fileFilter: (req, file, callback) => {
+        limits: {
 
-        if (
-            ALLOWED_TYPES.includes(
-                file.mimetype
-            )
-        ) {
+            fileSize:
+                MAX_FILE_SIZE
 
-            callback(null, true);
+        },
 
-        } else {
+        fileFilter:
+            (req, file, callback) => {
 
-            callback(
-                new Error(
-                    "Type de fichier non autorisé."
-                )
-            );
+                if (
+                    ALLOWED_TYPES.includes(
+                        file.mimetype
+                    )
+                ) {
 
-        }
+                    callback(
+                        null,
+                        true
+                    );
 
-    }
+                } else {
 
-});
+                    callback(
+                        new Error(
+                            "Type de fichier non autorisé."
+                        )
+                    );
+
+                }
+
+            }
+
+    });
 
 
 /* =====================================================
@@ -104,11 +197,13 @@ const upload = multer({
 ===================================================== */
 
 const repoFiles = [
+
     "site_node/",
     "site_node/server.js",
     "site_node/package.json",
     "site_node/package-lock.json",
     "site_node/media/"
+
 ];
 
 
@@ -116,24 +211,49 @@ const repoFiles = [
    HOME
 ===================================================== */
 
-app.get("/", (req, res) => {
+app.get(
+    "/",
+    (req, res) => {
 
-    res.send(
-        "Terminal server online."
-    );
+        res.send(
+            "Terminal server online."
+        );
 
-});
+    }
+);
 
 
 /* =====================================================
    DIR /S
 ===================================================== */
 
-app.get("/api/files", (req, res) => {
+app.get(
+    "/api/files",
+    (req, res) => {
 
-    res.json(repoFiles);
+        res.json(
+            repoFiles
+        );
 
-});
+    }
+);
+
+
+/* =====================================================
+   GITHUB CONFIG CHECK
+===================================================== */
+
+function githubConfigOK() {
+
+    return Boolean(
+
+        GITHUB_TOKEN &&
+        GITHUB_OWNER &&
+        GITHUB_REPO
+
+    );
+
+}
 
 
 /* =====================================================
@@ -141,21 +261,24 @@ app.get("/api/files", (req, res) => {
 ===================================================== */
 
 async function githubRequest(
-    path,
+    apiPath,
     options = {}
 ) {
 
-    if (!GITHUB_TOKEN) {
+    if (
+        !githubConfigOK()
+    ) {
 
         throw new Error(
-            "GITHUB_TOKEN manquant."
+            "Configuration GitHub incomplète. Vérifie GITHUB_TOKEN, GITHUB_OWNER et GITHUB_REPO dans Render."
         );
 
     }
 
+
     const response =
         await fetch(
-            `https://api.github.com${path}`,
+            `https://api.github.com${apiPath}`,
             {
 
                 ...options,
@@ -182,27 +305,39 @@ async function githubRequest(
     const text =
         await response.text();
 
+
     let data;
+
 
     try {
 
         data =
-            JSON.parse(text);
+            text
+                ? JSON.parse(text)
+                : {};
 
     } catch {
 
         data = {
-            message: text
+
+            message:
+                text ||
+                "Réponse GitHub invalide."
+
         };
 
     }
 
 
-    if (!response.ok) {
+    if (
+        !response.ok
+    ) {
 
         throw new Error(
+
             data.message ||
             `GitHub HTTP ${response.status}`
+
         );
 
     }
@@ -217,68 +352,96 @@ async function githubRequest(
    MEDIA LIST
 ===================================================== */
 
-app.get("/api/media", async (req, res) => {
+app.get(
+    "/api/media",
+    async (req, res) => {
 
-    try {
+        try {
 
-        const data =
-            await githubRequest(
-                `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${MEDIA_FOLDER}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+            if (
+                !githubConfigOK()
+            ) {
+
+                return res.status(500).json({
+
+                    error:
+                        "Configuration GitHub manquante sur le serveur."
+
+                });
+
+            }
+
+
+            const data =
+                await githubRequest(
+
+                    `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${MEDIA_FOLDER}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+
+                );
+
+
+            if (
+                !Array.isArray(data)
+            ) {
+
+                return res.json([]);
+
+            }
+
+
+            const files =
+                data
+                    .filter(
+                        file =>
+                            file.type ===
+                            "file"
+                    )
+                    .map(
+                        file => ({
+
+                            name:
+                                file.name,
+
+                            path:
+                                file.path,
+
+                            size:
+                                file.size,
+
+                            url:
+                                file.download_url,
+
+                            html_url:
+                                file.html_url
+
+                        })
+                    );
+
+
+            res.json(
+                files
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Erreur récupération médias:",
+                error.message
             );
 
 
-        if (!Array.isArray(data)) {
+            res.status(500).json({
 
-            return res.json([]);
+                error:
+                    error.message ||
+                    "Impossible de récupérer les médias."
+
+            });
 
         }
 
-
-        const files =
-            data
-                .filter(
-                    file =>
-                        file.type === "file"
-                )
-                .map(file => ({
-
-                    name:
-                        file.name,
-
-                    path:
-                        file.path,
-
-                    size:
-                        file.size,
-
-                    url:
-                        file.download_url,
-
-                    html_url:
-                        file.html_url
-
-                }));
-
-
-        res.json(files);
-
-    } catch (error) {
-
-        console.error(
-            "Erreur récupération médias:",
-            error.message
-        );
-
-        res.status(500).json({
-
-            error:
-                "Impossible de récupérer les médias."
-
-        });
-
     }
-
-});
+);
 
 
 /* =====================================================
@@ -292,7 +455,9 @@ app.post(
 
         try {
 
-            if (!req.file) {
+            if (
+                !req.file
+            ) {
 
                 return res.status(400).json({
 
@@ -304,17 +469,23 @@ app.post(
             }
 
 
-            if (!GITHUB_TOKEN) {
+            if (
+                !githubConfigOK()
+            ) {
 
                 return res.status(500).json({
 
                     error:
-                        "GITHUB_TOKEN n'est pas configuré."
+                        "Configuration GitHub manquante sur le serveur."
 
                 });
 
             }
 
+
+            /* =========================
+               USERNAME
+            ========================= */
 
             const username =
                 String(
@@ -331,14 +502,46 @@ app.post(
                     );
 
 
+            /* =========================
+               NOM PERSONNALISÉ
+            ========================= */
+
+            let customName =
+                String(
+                    req.body.customName ||
+                    ""
+                )
+                    .trim();
+
+
             /*
-             * Nettoyage du nom du fichier
+             * Si aucun nom personnalisé
+             * n'est fourni, on utilise
+             * le nom original.
              */
 
-            let originalName =
-                req.file.originalname
+            if (
+                !customName
+            ) {
+
+                customName =
+                    req.file.originalname;
+
+            }
+
+
+            /*
+             * Nettoyage du nom.
+             */
+
+            customName =
+                customName
                     .replace(
-                        /[^a-zA-Z0-9._-]/g,
+                        /[<>:"/\\|?*\x00-\x1F]/g,
+                        "_"
+                    )
+                    .replace(
+                        /\s+/g,
                         "_"
                     )
                     .substring(
@@ -347,38 +550,67 @@ app.post(
                     );
 
 
-            /*
-             * Évite les noms vides
-             */
+            if (
+                !customName
+            ) {
 
-            if (!originalName) {
-
-                originalName =
+                customName =
                     "file";
 
             }
 
 
+            /* =========================
+               EXTENSION
+            ========================= */
+
+            const originalExtension =
+                path.extname(
+                    req.file.originalname
+                );
+
+
+            let finalName =
+                customName;
+
+
             /*
-             * Timestamp pour éviter
-             * les collisions.
+             * Si l'utilisateur a entré
+             * "mon_video", on ajoute
+             * automatiquement ".mp4".
              */
+
+            if (
+                !path.extname(
+                    finalName
+                )
+            ) {
+
+                finalName +=
+                    originalExtension;
+
+            }
+
+
+            /* =========================
+               TIMESTAMP
+            ========================= */
 
             const timestamp =
                 Date.now();
 
 
             const filename =
-                `${timestamp}_${username}_${originalName}`;
+                `${timestamp}_${username}_${finalName}`;
 
 
             const githubPath =
                 `${MEDIA_FOLDER}/${filename}`;
 
 
-            /*
-             * Buffer -> Base64
-             */
+            /* =========================
+               BUFFER -> BASE64
+            ========================= */
 
             const content =
                 req.file.buffer.toString(
@@ -386,16 +618,19 @@ app.post(
                 );
 
 
-            /*
-             * Envoi vers GitHub
-             */
+            /* =========================
+               GITHUB UPLOAD
+            ========================= */
 
             const result =
                 await githubRequest(
+
                     `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${githubPath}`,
+
                     {
 
-                        method: "PUT",
+                        method:
+                            "PUT",
 
                         headers: {
 
@@ -419,8 +654,13 @@ app.post(
                             })
 
                     }
+
                 );
 
+
+            /* =========================
+               RAW URL
+            ========================= */
 
             const rawUrl =
                 `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${githubPath}`;
@@ -431,9 +671,9 @@ app.post(
             );
 
 
-            /*
-             * Préviens tous les utilisateurs
-             */
+            /* =========================
+               BROADCAST
+            ========================= */
 
             broadcast({
 
@@ -457,6 +697,10 @@ app.post(
 
             });
 
+
+            /* =========================
+               RESPONSE
+            ========================= */
 
             res.json({
 
@@ -485,7 +729,7 @@ app.post(
 
             console.error(
                 "Erreur upload:",
-                error
+                error.message
             );
 
 
@@ -504,11 +748,451 @@ app.post(
 
 
 /* =====================================================
+   CHAT LOG - GET FILES
+===================================================== */
+
+function getChatLogFiles() {
+
+    try {
+
+        return fs
+            .readdirSync(
+                CHAT_LOG_DIR
+            )
+            .filter(
+                file =>
+                    /^chat_\d+\.json$/.test(
+                        file
+                    )
+            )
+            .sort(
+                (a, b) => {
+
+                    const numberA =
+                        parseInt(
+                            a.match(
+                                /\d+/
+                            )[0]
+                        );
+
+                    const numberB =
+                        parseInt(
+                            b.match(
+                                /\d+/
+                            )[0]
+                        );
+
+
+                    return (
+                        numberA -
+                        numberB
+                    );
+
+                }
+            );
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+
+/* =====================================================
+   CHAT LOG - LAST FILE
+===================================================== */
+
+function getLastChatLog() {
+
+    const files =
+        getChatLogFiles();
+
+
+    if (
+        !files.length
+    ) {
+
+        return path.join(
+
+            CHAT_LOG_DIR,
+
+            "chat_0001.json"
+
+        );
+
+    }
+
+
+    return path.join(
+
+        CHAT_LOG_DIR,
+
+        files[
+            files.length - 1
+        ]
+
+    );
+
+}
+
+
+/* =====================================================
+   CHAT LOG - SAVE
+===================================================== */
+
+function saveChatMessage(
+    username,
+    message
+) {
+
+    try {
+
+        let filePath =
+            getLastChatLog();
+
+
+        let messages = [];
+
+
+        /* =========================
+           LECTURE
+        ========================= */
+
+        if (
+            fs.existsSync(
+                filePath
+            )
+        ) {
+
+            try {
+
+                const content =
+                    fs.readFileSync(
+                        filePath,
+                        "utf8"
+                    );
+
+
+                if (
+                    content.trim()
+                ) {
+
+                    messages =
+                        JSON.parse(
+                            content
+                        );
+
+                }
+
+            } catch {
+
+                messages = [];
+
+            }
+
+        }
+
+
+        /* =========================
+           NOUVEAU MESSAGE
+        ========================= */
+
+        const chatMessage = {
+
+            username:
+                username,
+
+            message:
+                message,
+
+            timestamp:
+                Date.now()
+
+        };
+
+
+        messages.push(
+            chatMessage
+        );
+
+
+        const newContent =
+            JSON.stringify(
+                messages,
+                null,
+                2
+            );
+
+
+        const newSize =
+            Buffer.byteLength(
+                newContent,
+                "utf8"
+            );
+
+
+        /* =========================
+           NOUVEAU FICHIER
+        ========================= */
+
+        if (
+            newSize >
+            CHAT_LOG_MAX_SIZE
+        ) {
+
+            const files =
+                getChatLogFiles();
+
+
+            let nextNumber =
+                1;
+
+
+            if (
+                files.length
+            ) {
+
+                nextNumber =
+                    Math.max(
+                        ...files.map(
+                            file =>
+                                parseInt(
+                                    file.match(
+                                        /\d+/
+                                    )[0]
+                                )
+                        )
+                    ) + 1;
+
+            }
+
+
+            filePath =
+                path.join(
+
+                    CHAT_LOG_DIR,
+
+                    `chat_${String(
+                        nextNumber
+                    ).padStart(
+                        4,
+                        "0"
+                    )}.json`
+
+                );
+
+
+            fs.writeFileSync(
+
+                filePath,
+
+                JSON.stringify(
+                    [
+                        chatMessage
+                    ],
+                    null,
+                    2
+                ),
+
+                "utf8"
+
+            );
+
+
+            console.log(
+
+                `Nouveau fichier de chat: ${path.basename(
+                    filePath
+                )}`
+
+            );
+
+
+            return;
+
+        }
+
+
+        /* =========================
+           ÉCRITURE
+        ========================= */
+
+        fs.writeFileSync(
+
+            filePath,
+
+            newContent,
+
+            "utf8"
+
+        );
+
+    } catch (error) {
+
+        console.error(
+
+            "Erreur sauvegarde chat:",
+            error.message
+
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   CHAT HISTORY - LOAD
+===================================================== */
+
+function loadChatHistory(
+    limit = 100
+) {
+
+    const files =
+        getChatLogFiles();
+
+
+    let history = [];
+
+
+    for (
+        const file of files
+    ) {
+
+        try {
+
+            const filePath =
+                path.join(
+                    CHAT_LOG_DIR,
+                    file
+                );
+
+
+            const content =
+                fs.readFileSync(
+                    filePath,
+                    "utf8"
+                );
+
+
+            if (
+                !content.trim()
+            )
+                continue;
+
+
+            const messages =
+                JSON.parse(
+                    content
+                );
+
+
+            if (
+                Array.isArray(
+                    messages
+                )
+            ) {
+
+                history.push(
+                    ...messages
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+
+                `Erreur lecture ${file}:`,
+                error.message
+
+            );
+
+        }
+
+    }
+
+
+    /*
+     * On garde seulement
+     * les derniers messages.
+     */
+
+    if (
+        history.length >
+        limit
+    ) {
+
+        history =
+            history.slice(
+                -limit
+            );
+
+    }
+
+
+    return history;
+
+}
+
+
+/* =====================================================
+   CHAT HISTORY API
+===================================================== */
+
+app.get(
+    "/api/chat/history",
+    (req, res) => {
+
+        try {
+
+            const history =
+                loadChatHistory(
+                    100
+                );
+
+
+            res.json(
+                history
+            );
+
+        } catch (error) {
+
+            console.error(
+
+                "Erreur historique:",
+                error.message
+
+            );
+
+
+            res.status(500).json({
+
+                error:
+                    "Impossible de récupérer l'historique."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
    UPLOAD ERROR HANDLER
 ===================================================== */
 
 app.use(
-    (error, req, res, next) => {
+    (
+        error,
+        req,
+        res,
+        next
+    ) => {
 
         if (
             error instanceof
@@ -540,7 +1224,9 @@ app.use(
         }
 
 
-        if (error) {
+        if (
+            error
+        ) {
 
             return res.status(400).json({
 
@@ -559,7 +1245,7 @@ app.use(
 
 
 /* =====================================================
-   WEBSOCKET
+   WEBSOCKET - BROADCAST
 ===================================================== */
 
 function broadcast(
@@ -568,21 +1254,37 @@ function broadcast(
 ) {
 
     const message =
-        JSON.stringify(data);
+        JSON.stringify(
+            data
+        );
 
 
     wss.clients.forEach(
         client => {
 
             if (
+
                 client !== except &&
+
                 client.readyState ===
                 WebSocket.OPEN
+
             ) {
 
-                client.send(
-                    message
-                );
+                try {
+
+                    client.send(
+                        message
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Erreur envoi WebSocket:",
+                        error.message
+                    );
+
+                }
 
             }
 
@@ -591,6 +1293,10 @@ function broadcast(
 
 }
 
+
+/* =====================================================
+   SEND USERS
+===================================================== */
 
 function sendUsers() {
 
@@ -612,6 +1318,10 @@ function sendUsers() {
 }
 
 
+/* =====================================================
+   WEBSOCKET CONNECTION
+===================================================== */
+
 wss.on(
     "connection",
     socket => {
@@ -620,6 +1330,29 @@ wss.on(
             "Nouvelle connexion"
         );
 
+
+        /* =========================
+           PING / KEEP ALIVE
+        ========================= */
+
+        socket.isAlive =
+            true;
+
+
+        socket.on(
+            "pong",
+            () => {
+
+                socket.isAlive =
+                    true;
+
+            }
+        );
+
+
+        /* =========================
+           MESSAGE
+        ========================= */
 
         socket.on(
             "message",
@@ -669,13 +1402,16 @@ wss.on(
                     users.set(
                         socket,
                         {
+
                             name:
                                 username
+
                         }
                     );
 
 
                     socket.send(
+
                         JSON.stringify({
 
                             type:
@@ -685,6 +1421,33 @@ wss.on(
                                 `Bienvenue ${username}.`
 
                         })
+
+                    );
+
+
+                    /*
+                     * Envoie les derniers
+                     * messages au nouveau joueur.
+                     */
+
+                    const history =
+                        loadChatHistory(
+                            100
+                        );
+
+
+                    socket.send(
+
+                        JSON.stringify({
+
+                            type:
+                                "chatHistory",
+
+                            messages:
+                                history
+
+                        })
+
                     );
 
 
@@ -700,6 +1463,7 @@ wss.on(
 
 
                     sendUsers();
+
 
                     return;
 
@@ -721,7 +1485,10 @@ wss.on(
                         );
 
 
-                    if (!user) return;
+                    if (
+                        !user
+                    )
+                        return;
 
 
                     const message =
@@ -739,15 +1506,18 @@ wss.on(
                             );
 
 
-                    if (!message)
+                    if (
+                        !message
+                    )
                         return;
 
 
                     /* =====================
-                       EASTER EGG
+                       EASTER EGG MARLEY
                     ===================== */
 
                     if (
+
                         message
                             .trim()
                             .toLowerCase()
@@ -756,6 +1526,7 @@ wss.on(
                                 ""
                             ) ===
                         "i love you marley"
+
                     ) {
 
                         broadcast({
@@ -772,6 +1543,19 @@ wss.on(
                         return;
 
                     }
+
+
+                    /* =====================
+                       SAUVEGARDE
+                    ===================== */
+
+                    saveChatMessage(
+
+                        user.name,
+
+                        message
+
+                    );
 
 
                     /* =====================
@@ -798,7 +1582,7 @@ wss.on(
 
 
         /* =========================
-           DISCONNECT
+           CLOSE
         ========================= */
 
         socket.on(
@@ -811,7 +1595,9 @@ wss.on(
                     );
 
 
-                if (!user)
+                if (
+                    !user
+                )
                     return;
 
 
@@ -835,10 +1621,80 @@ wss.on(
 
 
                 console.log(
+
                     `${user.name} est parti.`
+
                 );
 
             }
+        );
+
+
+        /* =========================
+           ERROR
+        ========================= */
+
+        socket.on(
+            "error",
+            error => {
+
+                console.error(
+                    "WebSocket error:",
+                    error.message
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =====================================================
+   WEBSOCKET KEEP ALIVE
+===================================================== */
+
+const websocketHeartbeat =
+    setInterval(
+        () => {
+
+            wss.clients.forEach(
+                socket => {
+
+                    if (
+                        socket.isAlive ===
+                        false
+                    ) {
+
+                        console.log(
+                            "WebSocket inactif → fermeture."
+                        );
+
+                        return socket.terminate();
+
+                    }
+
+
+                    socket.isAlive =
+                        false;
+
+
+                    socket.ping();
+
+                }
+            );
+
+        },
+        30000
+    );
+
+
+wss.on(
+    "close",
+    () => {
+
+        clearInterval(
+            websocketHeartbeat
         );
 
     }
@@ -860,6 +1716,32 @@ server.listen(
 
         console.log(
             `Serveur lancé sur le port ${PORT}`
+        );
+
+
+        console.log(
+            "GitHub owner:",
+            GITHUB_OWNER || "(manquant)"
+        );
+
+
+        console.log(
+            "GitHub repo:",
+            GITHUB_REPO || "(manquant)"
+        );
+
+
+        console.log(
+            "GitHub branch:",
+            GITHUB_BRANCH
+        );
+
+
+        console.log(
+            "GitHub token:",
+            GITHUB_TOKEN
+                ? "présent"
+                : "MANQUANT"
         );
 
     }
