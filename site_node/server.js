@@ -79,7 +79,7 @@ const GITHUB_BRANCH =
     "main";
 
 const MEDIA_FOLDER =
-    "media";
+    "site_node/media";
 
 
 /* =====================================================
