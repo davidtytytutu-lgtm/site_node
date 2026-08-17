@@ -5739,6 +5739,7 @@ async function bootAnimation() {
 
     await loadChatHistory();
 
+    await winampLoadServerMusic();
 
     if (currentUser) {
 
@@ -5842,6 +5843,91 @@ let winampPlaylist = [];
 
 let winampCurrentIndex = -1;
 
+/* =====================================================
+   LOAD SERVER MUSIC
+===================================================== */
+
+async function winampLoadServerMusic() {
+
+    try {
+
+        winampStatus.textContent =
+            "WINAMP // LOADING MUSIC...";
+
+        const response =
+            await fetch(
+                API +
+                "/api/music"
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+        }
+
+        const music =
+            await response.json();
+
+        if (!Array.isArray(music)) {
+
+            throw new Error(
+                "Réponse musique invalide."
+            );
+
+        }
+
+        winampPlaylist =
+            music.map(
+                track => ({
+
+                    name:
+                        track.name,
+
+                    url:
+                        track.download_url ||
+                        track.url,
+
+                    path:
+                        track.path,
+
+                    size:
+                        track.size
+
+                })
+            );
+
+        winampCurrentIndex =
+            -1;
+
+        winampRenderPlaylist();
+
+        winampTrackName.textContent =
+            winampPlaylist.length
+                ? "NO TRACK"
+                : "NO AUDIO FILES";
+
+        winampStatus.textContent =
+            "WINAMP // " +
+            winampPlaylist.length +
+            " TRACK(S)";
+
+    } catch (error) {
+
+        console.error(
+            "[WINAMP MUSIC]",
+            error
+        );
+
+        winampStatus.textContent =
+            "WINAMP // MUSIC ERROR";
+
+    }
+
+}
 
 /* =====================================================
    TIME FORMAT
@@ -6016,10 +6102,10 @@ function winampLoadTrack(index) {
         winampPlaylist[index];
 
 
-    const url =
-        URL.createObjectURL(
-            file
-        );
+const url =
+    file.url ||
+    file.download_url ||
+    URL.createObjectURL(file);
 
 
     winampAudio.pause();
@@ -6240,56 +6326,93 @@ function winampNextTrack() {
 
 winampFile.addEventListener(
     "change",
-    () => {
+    async () => {
 
         const files =
             Array.from(
                 winampFile.files || []
             );
 
-
-        if (
-            !files.length
-        ) {
-
+        if (!files.length) {
             return;
         }
 
-
-        winampPlaylist =
+        const audioFiles =
             files.filter(
                 file =>
-                    file.type.startsWith(
-                        "audio/"
-                    )
+                    file.type.startsWith("audio/")
             );
 
-
-        winampCurrentIndex =
-            -1;
-
-
-        winampAudio.pause();
-
-
-        winampAudio.removeAttribute(
-            "src"
-        );
-
-
-        winampTrackName.textContent =
-            "NO TRACK";
-
+        if (!audioFiles.length) {
+            return;
+        }
 
         winampStatus.textContent =
-            "WINAMP // PLAYLIST LOADED";
+            "WINAMP // UPLOADING...";
 
+        try {
 
-        winampRenderPlaylist();
+            for (
+                const file of audioFiles
+            ) {
+
+                const formData =
+                    new FormData();
+
+                formData.append(
+                    "file",
+                    file
+                );
+
+                const response =
+                    await fetch(
+                        API +
+                        "/api/music/upload",
+                        {
+                            method: "POST",
+                            credentials: "include",
+                            body: formData
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error ||
+                        "Erreur upload"
+                    );
+                }
+
+            }
+
+            winampStatus.textContent =
+                "WINAMP // UPLOAD COMPLETE";
+
+            await winampLoadServerMusic();
+
+            winampFile.value = "";
+
+        } catch (error) {
+
+            console.error(
+                "[WINAMP UPLOAD]",
+                error
+            );
+
+            winampStatus.textContent =
+                "WINAMP // UPLOAD ERROR";
+
+            alert(
+                "Erreur upload musique : " +
+                error.message
+            );
+
+        }
 
     }
 );
-
 
 /* =====================================================
    BUTTONS
