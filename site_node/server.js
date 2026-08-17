@@ -2333,14 +2333,20 @@ wss.on(
 
                 broadcast({
 
-                    type:
-                        "chat",
+                type:
+                    "chat",
 
-                    username:
-                        currentUser.name,
+               username:
+                currentUser.name,
 
-                    message:
-                        message
+                avatar:
+                currentUser.avatar,
+
+                message:
+                message,
+
+                timestamp:
+                Date.now()
 
                 });
 
