@@ -1660,8 +1660,138 @@ function getLastChatLog() {
 
 function saveChatMessage(
     username,
-    message
+    message,
+    avatar = null
 ) {
+
+    try {
+
+        let filePath =
+            getLastChatLog();
+
+        let messages = [];
+
+        if (
+            fs.existsSync(
+                filePath
+            )
+        ) {
+
+            try {
+
+                messages =
+                    JSON.parse(
+                        fs.readFileSync(
+                            filePath,
+                            "utf8"
+                        )
+                    );
+
+            } catch {
+
+                messages = [];
+
+            }
+
+        }
+
+        const chatMessage = {
+
+            username:
+                username,
+
+            avatar:
+                avatar || null,
+
+            message:
+                message,
+
+            timestamp:
+                Date.now()
+
+        };
+
+        messages.push(
+            chatMessage
+        );
+
+        const content =
+            JSON.stringify(
+                messages,
+                null,
+                2
+            );
+
+        if (
+            Buffer.byteLength(
+                content,
+                "utf8"
+            ) >
+            CHAT_LOG_MAX_SIZE
+        ) {
+
+            const files =
+                getChatLogFiles();
+
+            const nextNumber =
+                files.length
+                    ? Math.max(
+                        ...files.map(
+                            file =>
+                                parseInt(
+                                    file.match(
+                                        /\d+/
+                                    )[0]
+                                )
+                        )
+                    ) + 1
+                    : 1;
+
+            filePath =
+                path.join(
+                    CHAT_LOG_DIR,
+                    `chat_${String(
+                        nextNumber
+                    ).padStart(
+                        4,
+                        "0"
+                    )}.json`
+                );
+
+            fs.writeFileSync(
+
+                filePath,
+
+                JSON.stringify(
+                    [chatMessage],
+                    null,
+                    2
+                ),
+
+                "utf8"
+
+            );
+
+        } else {
+
+            fs.writeFileSync(
+                filePath,
+                content,
+                "utf8"
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Erreur sauvegarde chat:",
+            error.message
+        );
+
+    }
+
+}
 
     try {
 
@@ -2192,10 +2322,10 @@ wss.on(
                 ========================= */
 
                 saveChatMessage(
-                    currentUser.name,
-                    message
+                currentUser.name,
+                message,
+                currentUser.avatar
                 );
-
 
                 /* =========================
                    CHAT
