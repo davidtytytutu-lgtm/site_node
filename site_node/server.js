@@ -2,64 +2,26 @@ const http = require("http");
 const express = require("express");
 const WebSocket = require("ws");
 const multer = require("multer");
+const fs = require("fs");
 const path = require("path");
+const bcrypt = require("bcrypt");
+const session = require("express-session");
+const pg = require("pg");
+const connectPgSimple = require("connect-pg-simple");
 
 const app = express();
 
-
-/* =====================================================
-   CORS
-===================================================== */
-
-app.use((req, res, next) => {
-
-    res.setHeader(
-        "Access-Control-Allow-Origin",
-        "*"
-    );
-
-    res.setHeader(
-        "Access-Control-Allow-Methods",
-        "GET, POST, OPTIONS"
-    );
-
-    res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type"
-    );
-
-    if (req.method === "OPTIONS") {
-        return res.sendStatus(204);
-    }
-
-    next();
-
-});
+const {
+    Pool
+} = pg;
 
 
 /* =====================================================
-   SERVER
+   CONFIGURATION
 ===================================================== */
 
-const server =
-    http.createServer(app);
-
-const wss =
-    new WebSocket.Server({
-        server
-    });
-
-
-/* =====================================================
-   USERS
-===================================================== */
-
-const users = new Map();
-
-
-/* =====================================================
-   GITHUB CONFIG
-===================================================== */
+const PORT =
+    process.env.PORT || 3000;
 
 const GITHUB_TOKEN =
     process.env.GITHUB_TOKEN;
@@ -74,9 +36,9 @@ const GITHUB_BRANCH =
     process.env.GITHUB_BRANCH || "main";
 
 
-/*
- * Dossiers GitHub
- */
+/* =====================================================
+   GITHUB PATHS
+===================================================== */
 
 const MEDIA_FOLDER =
     "site_node/media";
@@ -85,28 +47,1171 @@ const CHAT_LOG_FOLDER =
     "site_node/chat_logs";
 
 
-/*
- * Taille maximale d'un fichier de log.
- *
- * 10 Mo pour éviter d'approcher
- * les limites de GitHub.
- */
+/* =====================================================
+   POSTGRESQL
+===================================================== */
 
-const CHAT_LOG_MAX_SIZE =
-    10 * 1024 * 1024;
+if (!process.env.DATABASE_URL) {
+
+    console.error(
+        "ERREUR : DATABASE_URL est manquante."
+    );
+
+}
 
 
-/*
- * Nombre de messages envoyés
- * au client lors de la connexion.
- */
+const pool =
+    new Pool({
 
-const CHAT_HISTORY_LIMIT =
-    100;
+        connectionString:
+            process.env.DATABASE_URL,
+
+        ssl:
+            process.env.NODE_ENV === "production"
+                ? {
+                    rejectUnauthorized: false
+                }
+                : false
+
+    });
 
 
 /* =====================================================
-   UPLOAD CONFIG
+   EXPRESS
+===================================================== */
+
+app.set(
+    "trust proxy",
+    1
+);
+
+app.use(
+    express.json({
+        limit: "1mb"
+    })
+);
+
+app.use(
+    express.urlencoded({
+        extended: true
+    })
+);
+
+
+/* =====================================================
+   CORS
+===================================================== */
+
+app.use(
+    (req, res, next) => {
+
+        const origin =
+            req.headers.origin;
+
+        if (origin) {
+
+            res.setHeader(
+                "Access-Control-Allow-Origin",
+                origin
+            );
+
+            res.setHeader(
+                "Access-Control-Allow-Credentials",
+                "true"
+            );
+
+        }
+
+        res.setHeader(
+            "Access-Control-Allow-Methods",
+            "GET, POST, PUT, DELETE, OPTIONS"
+        );
+
+        res.setHeader(
+            "Access-Control-Allow-Headers",
+            "Content-Type"
+        );
+
+        if (
+            req.method === "OPTIONS"
+        ) {
+
+            return res.sendStatus(
+                204
+            );
+
+        }
+
+        next();
+
+    }
+);
+
+
+/* =====================================================
+   SESSION
+===================================================== */
+
+const PgSession =
+    connectPgSimple(
+        session
+    );
+
+
+const sessionMiddleware =
+    session({
+
+        store:
+            new PgSession({
+
+                pool:
+                    pool,
+
+                tableName:
+                    "user_sessions",
+
+                createTableIfMissing:
+                    true
+
+            }),
+
+        secret:
+            process.env.SESSION_SECRET ||
+            "CHANGE-ME-ON-RENDER",
+
+        resave:
+            false,
+
+        saveUninitialized:
+            false,
+
+        cookie: {
+
+            httpOnly:
+                true,
+
+            secure:
+                process.env.NODE_ENV === "production",
+
+            sameSite:
+                "none",
+
+            maxAge:
+                1000 *
+                60 *
+                60 *
+                24 *
+                30
+
+        }
+
+    });
+
+
+app.use(
+    sessionMiddleware
+);
+
+
+/* =====================================================
+   HTTP SERVER
+===================================================== */
+
+const server =
+    http.createServer(
+        app
+    );
+
+
+/* =====================================================
+   WEBSOCKET
+===================================================== */
+
+const wss =
+    new WebSocket.Server({
+        noServer: true
+    });
+
+
+/* =====================================================
+   WEBSOCKET SESSION
+===================================================== */
+
+server.on(
+    "upgrade",
+    (request, socket, head) => {
+
+        const pathname =
+            new URL(
+                request.url,
+                `http://${request.headers.host}`
+            ).pathname;
+
+
+        if (
+            pathname !== "/"
+        ) {
+
+            socket.destroy();
+
+            return;
+
+        }
+
+
+        sessionMiddleware(
+            request,
+            {},
+            () => {
+
+                wss.handleUpgrade(
+                    request,
+                    socket,
+                    head,
+                    ws => {
+
+                        wss.emit(
+                            "connection",
+                            ws,
+                            request
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =====================================================
+   USERS ONLINE
+===================================================== */
+
+const users =
+    new Map();
+
+
+/* =====================================================
+   DATABASE INITIALIZATION
+===================================================== */
+
+async function initializeDatabase() {
+
+    await pool.query(`
+
+        CREATE TABLE IF NOT EXISTS users (
+
+            id SERIAL PRIMARY KEY,
+
+            username VARCHAR(20)
+                UNIQUE NOT NULL,
+
+            password_hash TEXT
+                NOT NULL,
+
+            avatar_url TEXT,
+
+            created_at TIMESTAMPTZ
+                NOT NULL
+                DEFAULT NOW()
+
+        );
+
+    `);
+
+
+    console.log(
+        "Table users OK."
+    );
+
+}
+
+
+/* =====================================================
+   GITHUB HELPER
+===================================================== */
+
+function githubConfigOK() {
+
+    return Boolean(
+
+        GITHUB_TOKEN &&
+        GITHUB_OWNER &&
+        GITHUB_REPO
+
+    );
+
+}
+
+
+async function githubRequest(
+    apiPath,
+    options = {}
+) {
+
+    if (
+        !githubConfigOK()
+    ) {
+
+        throw new Error(
+            "Configuration GitHub incomplète."
+        );
+
+    }
+
+
+    const response =
+        await fetch(
+            `https://api.github.com${apiPath}`,
+            {
+
+                ...options,
+
+                headers: {
+
+                    "Accept":
+                        "application/vnd.github+json",
+
+                    "Authorization":
+                        `Bearer ${GITHUB_TOKEN}`,
+
+                    "X-GitHub-Api-Version":
+                        "2022-11-28",
+
+                    ...(options.headers || {})
+
+                }
+
+            }
+        );
+
+
+    const text =
+        await response.text();
+
+
+    let data;
+
+
+    try {
+
+        data =
+            text
+                ? JSON.parse(text)
+                : {};
+
+    } catch {
+
+        data = {
+
+            message:
+                text
+
+        };
+
+    }
+
+
+    if (
+        !response.ok
+    ) {
+
+        throw new Error(
+
+            data.message ||
+            `GitHub HTTP ${response.status}`
+
+        );
+
+    }
+
+
+    return data;
+
+}
+
+
+/* =====================================================
+   ACCOUNT HELPERS
+===================================================== */
+
+function cleanUsername(
+    username
+) {
+
+    return String(
+        username || ""
+    )
+        .trim()
+        .replace(
+            /[^a-zA-Z0-9_-]/g,
+            ""
+        )
+        .substring(
+            0,
+            20
+        );
+
+}
+
+
+function getCurrentUser(
+    req
+) {
+
+    if (
+        !req.session ||
+        !req.session.userId
+    ) {
+
+        return null;
+
+    }
+
+    return {
+
+        id:
+            req.session.userId,
+
+        username:
+            req.session.username,
+
+        avatar:
+            req.session.avatar || null
+
+    };
+
+}
+
+
+/* =====================================================
+   AUTH MIDDLEWARE
+===================================================== */
+
+function requireAuth(
+    req,
+    res,
+    next
+) {
+
+    if (
+        !req.session ||
+        !req.session.userId
+    ) {
+
+        return res.status(
+            401
+        ).json({
+
+            error:
+                "Vous devez être connecté."
+
+        });
+
+    }
+
+
+    next();
+
+}
+
+
+/* =====================================================
+   REGISTER
+===================================================== */
+
+app.post(
+    "/api/auth/register",
+    async (req, res) => {
+
+        try {
+
+            let {
+                username,
+                password,
+                avatar
+            } = req.body;
+
+
+            username =
+                cleanUsername(
+                    username
+                );
+
+
+            password =
+                String(
+                    password || ""
+                );
+
+
+            avatar =
+                String(
+                    avatar || ""
+                ).trim();
+
+
+            if (
+                username.length < 3
+            ) {
+
+                return res.status(
+                    400
+                ).json({
+
+                    error:
+                        "Le pseudo doit contenir au moins 3 caractères."
+
+                });
+
+            }
+
+
+            if (
+                password.length < 6
+            ) {
+
+                return res.status(
+                    400
+                ).json({
+
+                    error:
+                        "Le mot de passe doit contenir au moins 6 caractères."
+
+                });
+
+            }
+
+
+            const existing =
+                await pool.query(
+
+                    `SELECT id
+                     FROM users
+                     WHERE LOWER(username) = LOWER($1)
+                     LIMIT 1`,
+
+                    [
+                        username
+                    ]
+
+                );
+
+
+            if (
+                existing.rows.length
+            ) {
+
+                return res.status(
+                    409
+                ).json({
+
+                    error:
+                        "Ce pseudo est déjà utilisé."
+
+                });
+
+            }
+
+
+            const passwordHash =
+                await bcrypt.hash(
+                    password,
+                    12
+                );
+
+
+            const result =
+                await pool.query(
+
+                    `INSERT INTO users
+                     (username, password_hash, avatar_url)
+                     VALUES ($1, $2, $3)
+                     RETURNING id, username, avatar_url, created_at`,
+
+                    [
+                        username,
+                        passwordHash,
+                        avatar || null
+                    ]
+
+                );
+
+
+            const user =
+                result.rows[0];
+
+
+            req.session.userId =
+                user.id;
+
+            req.session.username =
+                user.username;
+
+            req.session.avatar =
+                user.avatar_url || null;
+
+
+            req.session.save(
+                error => {
+
+                    if (error) {
+
+                        console.error(
+                            "Erreur session:",
+                            error
+                        );
+
+                        return res.status(
+                            500
+                        ).json({
+
+                            error:
+                                "Compte créé mais impossible de créer la session."
+
+                        });
+
+                    }
+
+
+                    res.json({
+
+                        success:
+                            true,
+
+                        user: {
+
+                            id:
+                                user.id,
+
+                            username:
+                                user.username,
+
+                            avatar:
+                                user.avatar_url
+
+                        }
+
+                    });
+
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "REGISTER:",
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    "Erreur pendant l'inscription."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+app.post(
+    "/api/auth/login",
+    async (req, res) => {
+
+        try {
+
+            const username =
+                cleanUsername(
+                    req.body.username
+                );
+
+
+            const password =
+                String(
+                    req.body.password || ""
+                );
+
+
+            if (
+                !username ||
+                !password
+            ) {
+
+                return res.status(
+                    400
+                ).json({
+
+                    error:
+                        "Pseudo et mot de passe requis."
+
+                });
+
+            }
+
+
+            const result =
+                await pool.query(
+
+                    `SELECT
+                        id,
+                        username,
+                        password_hash,
+                        avatar_url
+                     FROM users
+                     WHERE LOWER(username) = LOWER($1)
+                     LIMIT 1`,
+
+                    [
+                        username
+                    ]
+
+                );
+
+
+            if (
+                !result.rows.length
+            ) {
+
+                return res.status(
+                    401
+                ).json({
+
+                    error:
+                        "Pseudo ou mot de passe incorrect."
+
+                });
+
+            }
+
+
+            const user =
+                result.rows[0];
+
+
+            const valid =
+                await bcrypt.compare(
+                    password,
+                    user.password_hash
+                );
+
+
+            if (
+                !valid
+            ) {
+
+                return res.status(
+                    401
+                ).json({
+
+                    error:
+                        "Pseudo ou mot de passe incorrect."
+
+                });
+
+            }
+
+
+            req.session.userId =
+                user.id;
+
+            req.session.username =
+                user.username;
+
+            req.session.avatar =
+                user.avatar_url || null;
+
+
+            req.session.save(
+                error => {
+
+                    if (error) {
+
+                        console.error(
+                            "LOGIN SESSION:",
+                            error
+                        );
+
+                        return res.status(
+                            500
+                        ).json({
+
+                            error:
+                                "Impossible de créer la session."
+
+                        });
+
+                    }
+
+
+                    res.json({
+
+                        success:
+                            true,
+
+                        user: {
+
+                            id:
+                                user.id,
+
+                            username:
+                                user.username,
+
+                            avatar:
+                                user.avatar_url
+
+                        }
+
+                    });
+
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "LOGIN:",
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    "Erreur pendant la connexion."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+app.post(
+    "/api/auth/logout",
+    (req, res) => {
+
+        req.session.destroy(
+            error => {
+
+                if (error) {
+
+                    return res.status(
+                        500
+                    ).json({
+
+                        error:
+                            "Impossible de se déconnecter."
+
+                    });
+
+                }
+
+
+                res.clearCookie(
+                    "connect.sid"
+                );
+
+
+                res.json({
+
+                    success:
+                        true
+
+                });
+
+            }
+        );
+
+    }
+);
+
+
+/* =====================================================
+   CURRENT ACCOUNT
+===================================================== */
+
+app.get(
+    "/api/account/me",
+    async (req, res) => {
+
+        try {
+
+            const user =
+                getCurrentUser(
+                    req
+                );
+
+
+            if (
+                !user
+            ) {
+
+                return res.json({
+
+                    loggedIn:
+                        false,
+
+                    user:
+                        null
+
+                });
+
+            }
+
+
+            const result =
+                await pool.query(
+
+                    `SELECT
+                        id,
+                        username,
+                        avatar_url,
+                        created_at
+                     FROM users
+                     WHERE id = $1
+                     LIMIT 1`,
+
+                    [
+                        user.id
+                    ]
+
+                );
+
+
+            if (
+                !result.rows.length
+            ) {
+
+                req.session.destroy(
+                    () => {}
+                );
+
+
+                return res.json({
+
+                    loggedIn:
+                        false,
+
+                    user:
+                        null
+
+                });
+
+            }
+
+
+            const dbUser =
+                result.rows[0];
+
+
+            res.json({
+
+                loggedIn:
+                    true,
+
+                user: {
+
+                    id:
+                        dbUser.id,
+
+                    username:
+                        dbUser.username,
+
+                    avatar:
+                        dbUser.avatar_url,
+
+                    createdAt:
+                        dbUser.created_at
+
+                }
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "ME:",
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    "Erreur récupération compte."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   UPDATE PROFILE
+===================================================== */
+
+app.put(
+    "/api/account/profile",
+    requireAuth,
+    async (req, res) => {
+
+        try {
+
+            const avatar =
+                String(
+                    req.body.avatar || ""
+                )
+                    .trim()
+                    .substring(
+                        0,
+                        500
+                    );
+
+
+            const result =
+                await pool.query(
+
+                    `UPDATE users
+                     SET avatar_url = $1
+                     WHERE id = $2
+                     RETURNING id, username, avatar_url`,
+
+                    [
+                        avatar || null,
+                        req.session.userId
+                    ]
+
+                );
+
+
+            if (
+                !result.rows.length
+            ) {
+
+                return res.status(
+                    404
+                ).json({
+
+                    error:
+                        "Compte introuvable."
+
+                });
+
+            }
+
+
+            req.session.avatar =
+                result.rows[0].avatar_url;
+
+
+            res.json({
+
+                success:
+                    true,
+
+                user: {
+
+                    id:
+                        result.rows[0].id,
+
+                    username:
+                        result.rows[0].username,
+
+                    avatar:
+                        result.rows[0].avatar_url
+
+                }
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "PROFILE:",
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                error:
+                    "Impossible de modifier le profil."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   FILE LIST
+===================================================== */
+
+app.get(
+    "/api/files",
+    (req, res) => {
+
+        res.json([
+
+            "site_node/",
+            "site_node/server.js",
+            "site_node/package.json",
+            "site_node/package-lock.json",
+            "site_node/media/",
+            "site_node/chat_logs/"
+
+        ]);
+
+    }
+);
+
+
+/* =====================================================
+   HOME
+===================================================== */
+
+app.get(
+    "/",
+    (req, res) => {
+
+        res.send(
+            "David Terminal Server online."
+        );
+
+    }
+);
+
+
+/* =====================================================
+   MEDIA CONFIG
 ===================================================== */
 
 const MAX_FILE_SIZE =
@@ -170,229 +1275,6 @@ const upload =
 
 
 /* =====================================================
-   FILE LIST
-===================================================== */
-
-const repoFiles = [
-
-    "site_node/",
-    "site_node/server.js",
-    "site_node/package.json",
-    "site_node/package-lock.json",
-    "site_node/media/",
-    "site_node/chat_logs/"
-
-];
-
-
-/* =====================================================
-   HOME
-===================================================== */
-
-app.get(
-    "/",
-    (req, res) => {
-
-        res.send(
-            "Terminal server online."
-        );
-
-    }
-);
-
-
-/* =====================================================
-   DIR /S
-===================================================== */
-
-app.get(
-    "/api/files",
-    (req, res) => {
-
-        res.json(
-            repoFiles
-        );
-
-    }
-);
-
-
-/* =====================================================
-   GITHUB CONFIG CHECK
-===================================================== */
-
-function githubConfigOK() {
-
-    return Boolean(
-
-        GITHUB_TOKEN &&
-        GITHUB_OWNER &&
-        GITHUB_REPO
-
-    );
-
-}
-
-
-/* =====================================================
-   GITHUB API HELPER
-===================================================== */
-
-async function githubRequest(
-    apiPath,
-    options = {}
-) {
-
-    if (
-        !githubConfigOK()
-    ) {
-
-        throw new Error(
-            "Configuration GitHub incomplète. Vérifie GITHUB_TOKEN, GITHUB_OWNER et GITHUB_REPO dans Render."
-        );
-
-    }
-
-
-    const response =
-        await fetch(
-
-            `https://api.github.com${apiPath}`,
-
-            {
-
-                ...options,
-
-                headers: {
-
-                    "Accept":
-                        "application/vnd.github+json",
-
-                    "Authorization":
-                        `Bearer ${GITHUB_TOKEN}`,
-
-                    "X-GitHub-Api-Version":
-                        "2022-11-28",
-
-                    ...(options.headers || {})
-
-                }
-
-            }
-
-        );
-
-
-    const text =
-        await response.text();
-
-
-    let data;
-
-
-    try {
-
-        data =
-            text
-                ? JSON.parse(text)
-                : {};
-
-    } catch {
-
-        data = {
-
-            message:
-                text ||
-                "Réponse GitHub invalide."
-
-        };
-
-    }
-
-
-    if (
-        !response.ok
-    ) {
-
-        const error =
-            new Error(
-
-                data.message ||
-                `GitHub HTTP ${response.status}`
-
-            );
-
-
-        error.status =
-            response.status;
-
-
-        throw error;
-
-    }
-
-
-    return data;
-
-}
-
-
-/* =====================================================
-   GITHUB - LIST DIRECTORY
-===================================================== */
-
-async function githubListFolder(
-    folder
-) {
-
-    try {
-
-        const data =
-            await githubRequest(
-
-                `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${folder}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
-
-            );
-
-
-        if (
-            !Array.isArray(data)
-        ) {
-
-            return [];
-
-        }
-
-
-        return data;
-
-    } catch (error) {
-
-        /*
-         * Si le dossier n'existe pas encore,
-         * GitHub renvoie 404.
-         *
-         * On considère simplement
-         * qu'il est vide.
-         */
-
-        if (
-            error.status === 404
-        ) {
-
-            return [];
-
-        }
-
-
-        throw error;
-
-    }
-
-}
-
-
-/* =====================================================
    MEDIA LIST
 ===================================================== */
 
@@ -402,14 +1284,25 @@ app.get(
 
         try {
 
-            const files =
-                await githubListFolder(
-                    MEDIA_FOLDER
+            const data =
+                await githubRequest(
+
+                    `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${MEDIA_FOLDER}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+
                 );
 
 
-            const media =
-                files
+            if (
+                !Array.isArray(data)
+            ) {
+
+                return res.json([]);
+
+            }
+
+
+            const files =
+                data
                     .filter(
                         file =>
                             file.type ===
@@ -438,25 +1331,23 @@ app.get(
 
 
             res.json(
-                media
+                files
             );
-
 
         } catch (error) {
 
             console.error(
-
                 "Erreur récupération médias:",
                 error.message
-
             );
 
 
-            res.status(500).json({
+            res.status(
+                500
+            ).json({
 
                 error:
-                    error.message ||
-                    "Impossible de récupérer les médias."
+                    error.message
 
             });
 
@@ -467,11 +1358,12 @@ app.get(
 
 
 /* =====================================================
-   UPLOAD MEDIA
+   MEDIA UPLOAD
 ===================================================== */
 
 app.post(
     "/api/upload",
+    requireAuth,
     upload.single("file"),
     async (req, res) => {
 
@@ -481,7 +1373,9 @@ app.post(
                 !req.file
             ) {
 
-                return res.status(400).json({
+                return res.status(
+                    400
+                ).json({
 
                     error:
                         "Aucun fichier envoyé."
@@ -491,51 +1385,14 @@ app.post(
             }
 
 
-            if (
-                !githubConfigOK()
-            ) {
-
-                return res.status(500).json({
-
-                    error:
-                        "Configuration GitHub manquante sur le serveur."
-
-                });
-
-            }
-
-
-            /* =========================
-               USERNAME
-            ========================= */
-
             const username =
-                String(
+                req.session.username;
 
-                    req.body.username ||
-                    "anonymous"
-
-                )
-                    .replace(
-                        /[^a-zA-Z0-9_-]/g,
-                        "_"
-                    )
-                    .substring(
-                        0,
-                        20
-                    );
-
-
-            /* =========================
-               NOM PERSONNALISÉ
-            ========================= */
 
             let customName =
                 String(
-
                     req.body.customName ||
                     ""
-
                 )
                     .trim();
 
@@ -552,88 +1409,55 @@ app.post(
 
             customName =
                 customName
-
                     .replace(
                         /[<>:"/\\|?*\x00-\x1F]/g,
                         "_"
                     )
-
                     .replace(
                         /\s+/g,
                         "_"
                     )
-
                     .substring(
                         0,
                         100
                     );
 
 
-            if (
-                !customName
-            ) {
-
-                customName =
-                    "file";
-
-            }
-
-
-            /* =========================
-               EXTENSION
-            ========================= */
-
-            const originalExtension =
+            const extension =
                 path.extname(
                     req.file.originalname
                 );
 
 
-            let finalName =
-                customName;
-
-
             if (
                 !path.extname(
-                    finalName
+                    customName
                 )
             ) {
 
-                finalName +=
-                    originalExtension;
+                customName +=
+                    extension;
 
             }
 
-
-            /* =========================
-               TIMESTAMP
-            ========================= */
 
             const timestamp =
                 Date.now();
 
 
             const filename =
-                `${timestamp}_${username}_${finalName}`;
+                `${timestamp}_${username}_${customName}`;
 
 
             const githubPath =
                 `${MEDIA_FOLDER}/${filename}`;
 
 
-            /* =========================
-               BUFFER -> BASE64
-            ========================= */
-
             const content =
                 req.file.buffer.toString(
                     "base64"
                 );
 
-
-            /* =========================
-               GITHUB UPLOAD
-            ========================= */
 
             const result =
                 await githubRequest(
@@ -671,22 +1495,9 @@ app.post(
                 );
 
 
-            /* =========================
-               RAW URL
-            ========================= */
-
             const rawUrl =
                 `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${githubPath}`;
 
-
-            console.log(
-                `Upload réussi: ${filename}`
-            );
-
-
-            /* =========================
-               BROADCAST
-            ========================= */
 
             broadcast({
 
@@ -711,10 +1522,6 @@ app.post(
             });
 
 
-            /* =========================
-               RESPONSE
-            ========================= */
-
             res.json({
 
                 success:
@@ -738,22 +1545,20 @@ app.post(
 
             });
 
-
         } catch (error) {
 
             console.error(
-
-                "Erreur upload:",
-                error.message
-
+                "UPLOAD:",
+                error
             );
 
 
-            res.status(500).json({
+            res.status(
+                500
+            ).json({
 
                 error:
-                    error.message ||
-                    "Erreur pendant l'upload."
+                    error.message
 
             });
 
@@ -764,626 +1569,293 @@ app.post(
 
 
 /* =====================================================
-   CHAT LOG FILES
+   CHAT LOG
 ===================================================== */
 
-async function getChatLogFiles() {
-
-    const files =
-        await githubListFolder(
-            CHAT_LOG_FOLDER
-        );
-
-
-    return files
-
-        .filter(
-            file =>
-                file.type === "file" &&
-                /^chat_\d+\.json$/.test(
-                    file.name
-                )
-        )
-
-        .sort(
-            (a, b) => {
-
-                const numberA =
-                    parseInt(
-                        a.name.match(
-                            /\d+/
-                        )[0]
-                    );
+const CHAT_LOG_DIR =
+    path.join(
+        __dirname,
+        "chat_logs"
+    );
 
 
-                const numberB =
-                    parseInt(
-                        b.name.match(
-                            /\d+/
-                        )[0]
-                    );
+const CHAT_LOG_MAX_SIZE =
+    10 * 1024 * 1024;
 
 
-                return (
-                    numberA -
-                    numberB
-                );
+if (
+    !fs.existsSync(
+        CHAT_LOG_DIR
+    )
+) {
 
-            }
-        );
+    fs.mkdirSync(
+        CHAT_LOG_DIR,
+        {
+            recursive: true
+        }
+    );
 
 }
 
 
-/* =====================================================
-   CHAT LOG - READ FILE
-===================================================== */
+function getChatLogFiles() {
 
-async function readChatLogFile(
-    file
+    try {
+
+        return fs
+            .readdirSync(
+                CHAT_LOG_DIR
+            )
+            .filter(
+                file =>
+                    /^chat_\d+\.json$/.test(
+                        file
+                    )
+            )
+            .sort(
+                (a, b) =>
+                    parseInt(
+                        a.match(/\d+/)[0]
+                    ) -
+                    parseInt(
+                        b.match(/\d+/)[0]
+                    )
+            );
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+
+function getLastChatLog() {
+
+    const files =
+        getChatLogFiles();
+
+
+    if (
+        !files.length
+    ) {
+
+        return path.join(
+            CHAT_LOG_DIR,
+            "chat_0001.json"
+        );
+
+    }
+
+
+    return path.join(
+        CHAT_LOG_DIR,
+        files[files.length - 1]
+    );
+
+}
+
+
+function saveChatMessage(
+    username,
+    message
 ) {
 
     try {
 
-        const data =
-            await githubRequest(
-
-                `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${file.path}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
-
-            );
+        let filePath =
+            getLastChatLog();
 
 
-        if (
-            !data.content
-        ) {
-
-            return {
-
-                messages: [],
-                sha: data.sha
-
-            };
-
-        }
-
-
-        const decoded =
-            Buffer
-                .from(
-                    data.content.replace(
-                        /\n/g,
-                        ""
-                    ),
-                    "base64"
-                )
-                .toString(
-                    "utf8"
-                );
+        let messages = [];
 
 
         if (
-            !decoded.trim()
+            fs.existsSync(
+                filePath
+            )
         ) {
 
-            return {
+            try {
 
-                messages: [],
-                sha: data.sha
+                messages =
+                    JSON.parse(
+                        fs.readFileSync(
+                            filePath,
+                            "utf8"
+                        )
+                    );
 
-            };
+            } catch {
 
-        }
-
-
-        const messages =
-            JSON.parse(
-                decoded
-            );
-
-
-        return {
-
-            messages:
-                Array.isArray(messages)
-                    ? messages
-                    : [],
-
-            sha:
-                data.sha
-
-        };
-
-
-    } catch (error) {
-
-        console.error(
-
-            `Erreur lecture ${file.name}:`,
-            error.message
-
-        );
-
-
-        return {
-
-            messages: [],
-            sha:
-                null
-
-        };
-
-    }
-
-}
-
-
-/* =====================================================
-   CHAT LOG - NEXT NUMBER
-===================================================== */
-
-function getNextChatLogNumber(
-    files
-) {
-
-    if (
-        !files.length
-    ) {
-
-        return 1;
-
-    }
-
-
-    let highest =
-        0;
-
-
-    for (
-        const file of files
-    ) {
-
-        const match =
-            file.name.match(
-                /^chat_(\d+)\.json$/
-            );
-
-
-        if (
-            match
-        ) {
-
-            const number =
-                parseInt(
-                    match[1]
-                );
-
-
-            if (
-                number >
-                highest
-            ) {
-
-                highest =
-                    number;
+                messages = [];
 
             }
 
         }
 
-    }
+
+        const chatMessage = {
+
+            username:
+                username,
+
+            message:
+                message,
+
+            timestamp:
+                Date.now()
+
+        };
 
 
-    return (
-        highest +
-        1
-    );
-
-}
-
-
-/* =====================================================
-   CHAT LOG - GITHUB SAVE
-===================================================== */
-
-/*
- * Les sauvegardes sont mises dans une file
- * pour éviter que deux messages essayent
- * de modifier le même fichier GitHub
- * simultanément.
- */
-
-let chatSaveQueue =
-    Promise.resolve();
-
-
-function queueChatSave(
-    username,
-    message
-) {
-
-    chatSaveQueue =
-        chatSaveQueue
-            .then(
-                () =>
-                    saveChatMessageToGitHub(
-                        username,
-                        message
-                    )
-            )
-            .catch(
-                error => {
-
-                    console.error(
-
-                        "Erreur file sauvegarde chat:",
-                        error.message
-
-                    );
-
-                }
-            );
-
-
-    return chatSaveQueue;
-
-}
-
-
-/* =====================================================
-   SAVE CHAT MESSAGE TO GITHUB
-===================================================== */
-
-async function saveChatMessageToGitHub(
-    username,
-    message
-) {
-
-    const chatMessage = {
-
-        username:
-            username,
-
-        message:
-            message,
-
-        timestamp:
-            Date.now()
-
-    };
-
-
-    let files =
-        await getChatLogFiles();
-
-
-    /*
-     * Aucun fichier
-     */
-
-    if (
-        !files.length
-    ) {
-
-        const filename =
-            "chat_0001.json";
-
-
-        const githubPath =
-            `${CHAT_LOG_FOLDER}/${filename}`;
+        messages.push(
+            chatMessage
+        );
 
 
         const content =
             JSON.stringify(
-                [
-                    chatMessage
-                ],
+                messages,
                 null,
                 2
             );
 
 
-        await githubRequest(
+        if (
+            Buffer.byteLength(
+                content,
+                "utf8"
+            ) >
+            CHAT_LOG_MAX_SIZE
+        ) {
 
-            `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${githubPath}`,
+            const files =
+                getChatLogFiles();
 
-            {
 
-                method:
-                    "PUT",
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json"
-
-                },
-
-                body:
-                    JSON.stringify({
-
-                        message:
-                            `Create chat log: ${filename}`,
-
-                        content:
-                            Buffer
-                                .from(
-                                    content,
-                                    "utf8"
+            const nextNumber =
+                files.length
+                    ? Math.max(
+                        ...files.map(
+                            file =>
+                                parseInt(
+                                    file.match(
+                                        /\d+/
+                                    )[0]
                                 )
-                                .toString(
-                                    "base64"
-                                ),
-
-                        branch:
-                            GITHUB_BRANCH
-
-                    })
-
-            }
-
-        );
+                        )
+                    ) + 1
+                    : 1;
 
 
-        console.log(
-            `Création ${filename}`
-        );
+            filePath =
+                path.join(
+                    CHAT_LOG_DIR,
+                    `chat_${String(
+                        nextNumber
+                    ).padStart(
+                        4,
+                        "0"
+                    )}.json`
+                );
 
 
-        return;
+            fs.writeFileSync(
 
-    }
+                filePath,
 
+                JSON.stringify(
+                    [chatMessage],
+                    null,
+                    2
+                ),
 
-    /*
-     * Dernier fichier
-     */
+                "utf8"
 
-    const lastFile =
-        files[
-            files.length - 1
-        ];
-
-
-    const result =
-        await readChatLogFile(
-            lastFile
-        );
-
-
-    let messages =
-        result.messages;
-
-
-    messages.push(
-        chatMessage
-    );
-
-
-    const newContent =
-        JSON.stringify(
-            messages,
-            null,
-            2
-        );
-
-
-    const newSize =
-        Buffer.byteLength(
-            newContent,
-            "utf8"
-        );
-
-
-    /*
-     * Le fichier dépasse la limite.
-     *
-     * On crée un nouveau fichier.
-     */
-
-    if (
-        newSize >
-        CHAT_LOG_MAX_SIZE
-    ) {
-
-        const nextNumber =
-            getNextChatLogNumber(
-                files
             );
 
+        } else {
 
-        const filename =
-            `chat_${String(
-                nextNumber
-            ).padStart(
-                4,
-                "0"
-            )}` +
-            `.json`;
-
-
-        const githubPath =
-            `${CHAT_LOG_FOLDER}/${filename}`;
-
-
-        const firstContent =
-            JSON.stringify(
-                [
-                    chatMessage
-                ],
-                null,
-                2
+            fs.writeFileSync(
+                filePath,
+                content,
+                "utf8"
             );
-
-
-        await githubRequest(
-
-            `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${githubPath}`,
-
-            {
-
-                method:
-                    "PUT",
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json"
-
-                },
-
-                body:
-                    JSON.stringify({
-
-                        message:
-                            `Create chat log: ${filename}`,
-
-                        content:
-                            Buffer
-                                .from(
-                                    firstContent,
-                                    "utf8"
-                                )
-                                .toString(
-                                    "base64"
-                                ),
-
-                        branch:
-                            GITHUB_BRANCH
-
-                    })
-
-            }
-
-        );
-
-
-        console.log(
-            `Nouveau fichier chat: ${filename}`
-        );
-
-
-        return;
-
-    }
-
-
-    /*
-     * Mise à jour du fichier existant.
-     */
-
-    await githubRequest(
-
-        `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${lastFile.path}`,
-
-        {
-
-            method:
-                "PUT",
-
-            headers: {
-
-                "Content-Type":
-                    "application/json"
-
-            },
-
-            body:
-                JSON.stringify({
-
-                    message:
-                        `Update chat log: ${lastFile.name}`,
-
-                    content:
-                        Buffer
-                            .from(
-                                newContent,
-                                "utf8"
-                            )
-                            .toString(
-                                "base64"
-                            ),
-
-                    sha:
-                        result.sha,
-
-                    branch:
-                        GITHUB_BRANCH
-
-                })
 
         }
 
-    );
+    } catch (error) {
 
+        console.error(
+            "Erreur sauvegarde chat:",
+            error.message
+        );
 
-    console.log(
-        `Message sauvegardé dans ${lastFile.name}`
-    );
+    }
 
 }
 
 
-/* =====================================================
-   LOAD CHAT HISTORY FROM GITHUB
-===================================================== */
-
-async function loadChatHistory(
-    limit = CHAT_HISTORY_LIMIT
+function loadChatHistory(
+    limit = 100
 ) {
 
     const files =
-        await getChatLogFiles();
+        getChatLogFiles();
 
 
     let history = [];
 
 
-    /*
-     * Les fichiers sont déjà
-     * dans l'ordre chronologique.
-     */
-
     for (
         const file of files
     ) {
 
-        const result =
-            await readChatLogFile(
-                file
-            );
+        try {
+
+            const content =
+                fs.readFileSync(
+                    path.join(
+                        CHAT_LOG_DIR,
+                        file
+                    ),
+                    "utf8"
+                );
 
 
-        if (
-            result.messages.length
-        ) {
+            const messages =
+                JSON.parse(
+                    content
+                );
 
-            history.push(
-                ...result.messages
-            );
+
+            if (
+                Array.isArray(
+                    messages
+                )
+            ) {
+
+                history.push(
+                    ...messages
+                );
+
+            }
+
+        } catch {
+
+            // fichier ignoré
 
         }
 
     }
 
 
-    /*
-     * Seulement les derniers messages.
-     */
-
-    if (
-        history.length >
-        limit
-    ) {
-
-        history =
-            history.slice(
-                -limit
-            );
-
-    }
-
-
-    return history;
+    return history.length > limit
+        ? history.slice(-limit)
+        : history;
 
 }
 
@@ -1392,100 +1864,41 @@ async function loadChatHistory(
    CHAT HISTORY API
 ===================================================== */
 
-/*
- * Route principale utilisée
- * par ton HTML.
- */
-
 app.get(
     "/api/chat-history",
-    async (req, res) => {
+    (req, res) => {
 
-        try {
-
-            const history =
-                await loadChatHistory(
-                    CHAT_HISTORY_LIMIT
-                );
-
-
-            res.json(
-                history
-            );
-
-
-        } catch (error) {
-
-            console.error(
-
-                "Erreur historique:",
-                error.message
-
-            );
-
-
-            res.status(500).json({
-
-                error:
-                    error.message ||
-                    "Impossible de récupérer l'historique."
-
-            });
-
-        }
+        res.json(
+            loadChatHistory(
+                100
+            )
+        );
 
     }
 );
 
 
 /*
- * Ancienne route conservée
- * pour compatibilité.
+ * Alias pour garder compatible
+ * avec ton ancien HTML.
  */
 
 app.get(
     "/api/chat/history",
-    async (req, res) => {
+    (req, res) => {
 
-        try {
-
-            const history =
-                await loadChatHistory(
-                    CHAT_HISTORY_LIMIT
-                );
-
-
-            res.json(
-                history
-            );
-
-
-        } catch (error) {
-
-            console.error(
-
-                "Erreur historique:",
-                error.message
-
-            );
-
-
-            res.status(500).json({
-
-                error:
-                    error.message ||
-                    "Impossible de récupérer l'historique."
-
-            });
-
-        }
+        res.json(
+            loadChatHistory(
+                100
+            )
+        );
 
     }
 );
 
 
 /* =====================================================
-   WEBSOCKET BROADCAST
+   BROADCAST
 ===================================================== */
 
 function broadcast(
@@ -1511,22 +1924,9 @@ function broadcast(
 
             ) {
 
-                try {
-
-                    client.send(
-                        message
-                    );
-
-                } catch (error) {
-
-                    console.error(
-
-                        "Erreur WebSocket:",
-                        error.message
-
-                    );
-
-                }
+                client.send(
+                    message
+                );
 
             }
 
@@ -1535,10 +1935,6 @@ function broadcast(
 
 }
 
-
-/* =====================================================
-   SEND USERS
-===================================================== */
 
 function sendUsers() {
 
@@ -1550,11 +1946,10 @@ function sendUsers() {
         users:
             [
                 ...users.values()
-            ]
-                .map(
-                    user =>
-                        user.name
-                )
+            ].map(
+                user =>
+                    user.name
+            )
 
     });
 
@@ -1562,21 +1957,17 @@ function sendUsers() {
 
 
 /* =====================================================
-   WEBSOCKET CONNECTION
+   WEBSOCKET
 ===================================================== */
 
 wss.on(
     "connection",
-    socket => {
+    (socket, request) => {
 
         console.log(
-            "Nouvelle connexion"
+            "Nouvelle connexion WebSocket"
         );
 
-
-        /* =========================
-           KEEP ALIVE
-        ========================= */
 
         socket.isAlive =
             true;
@@ -1593,13 +1984,109 @@ wss.on(
         );
 
 
-        /* =========================
+        /*
+         * Vérification de session
+         */
+
+        if (
+            !request.session ||
+            !request.session.userId
+        ) {
+
+            socket.send(
+                JSON.stringify({
+
+                    type:
+                        "authRequired",
+
+                    message:
+                        "Connexion requise."
+
+                })
+            );
+
+
+            socket.close();
+
+            return;
+
+        }
+
+
+        const username =
+            request.session.username;
+
+
+        const user = {
+
+            id:
+                request.session.userId,
+
+            name:
+                username,
+
+            avatar:
+                request.session.avatar ||
+                null
+
+        };
+
+
+        users.set(
+            socket,
+            user
+        );
+
+
+        socket.send(
+            JSON.stringify({
+
+                type:
+                    "system",
+
+                message:
+                    `Bienvenue ${username}.`
+
+            })
+        );
+
+
+        socket.send(
+            JSON.stringify({
+
+                type:
+                    "chatHistory",
+
+                messages:
+                    loadChatHistory(
+                        100
+                    )
+
+            })
+        );
+
+
+        broadcast({
+
+            type:
+                "join",
+
+            username:
+                username
+
+        }, socket);
+
+
+        sendUsers();
+
+
+        /* =================================================
            MESSAGE
-        ========================= */
+        ================================================= */
 
         socket.on(
             "message",
-            async raw => {
+            raw => {
 
                 let data;
 
@@ -1618,118 +2105,81 @@ wss.on(
                 }
 
 
+                if (
+                    data.type !==
+                    "chat"
+                ) {
+
+                    return;
+
+                }
+
+
+                const currentUser =
+                    users.get(
+                        socket
+                    );
+
+
+                if (
+                    !currentUser
+                ) {
+
+                    return;
+
+                }
+
+
+                const message =
+                    String(
+                        data.message ||
+                        ""
+                    )
+                        .replace(
+                            /[<>]/g,
+                            ""
+                        )
+                        .substring(
+                            0,
+                            300
+                        )
+                        .trim();
+
+
+                if (
+                    !message
+                ) {
+
+                    return;
+
+                }
+
+
                 /* =========================
-                   JOIN
+                   MARLEY
                 ========================= */
 
                 if (
-                    data.type ===
-                    "join"
+
+                    message
+                        .toLowerCase()
+                        .replace(
+                            /[.!?]+$/g,
+                            ""
+                        ) ===
+                    "i love you marley"
+
                 ) {
-
-                    const username =
-                        String(
-
-                            data.username ||
-                            "anonymous"
-
-                        )
-                            .replace(
-                                /[<>]/g,
-                                ""
-                            )
-                            .substring(
-                                0,
-                                20
-                            );
-
-
-                    users.set(
-
-                        socket,
-
-                        {
-
-                            name:
-                                username
-
-                        }
-
-                    );
-
-
-                    socket.send(
-
-                        JSON.stringify({
-
-                            type:
-                                "system",
-
-                            message:
-                                `Bienvenue ${username}.`
-
-                        })
-
-                    );
-
-
-                    /*
-                     * Historique depuis GitHub
-                     */
-
-                    try {
-
-                        const history =
-                            await loadChatHistory(
-                                CHAT_HISTORY_LIMIT
-                            );
-
-
-                        if (
-                            socket.readyState ===
-                            WebSocket.OPEN
-                        ) {
-
-                            socket.send(
-
-                                JSON.stringify({
-
-                                    type:
-                                        "chatHistory",
-
-                                    messages:
-                                        history
-
-                                })
-
-                            );
-
-                        }
-
-                    } catch (error) {
-
-                        console.error(
-
-                            "Erreur envoi historique:",
-                            error.message
-
-                        );
-
-                    }
-
 
                     broadcast({
 
                         type:
-                            "join",
+                            "marley",
 
                         username:
-                            username
+                            currentUser.name
 
-                    }, socket);
-
-
-                    sendUsers();
+                    });
 
 
                     return;
@@ -1738,121 +2188,39 @@ wss.on(
 
 
                 /* =========================
+                   SAVE
+                ========================= */
+
+                saveChatMessage(
+                    currentUser.name,
+                    message
+                );
+
+
+                /* =========================
                    CHAT
                 ========================= */
 
-                if (
-                    data.type ===
-                    "chat"
-                ) {
+                broadcast({
 
-                    const user =
-                        users.get(
-                            socket
-                        );
+                    type:
+                        "chat",
 
+                    username:
+                        currentUser.name,
 
-                    if (
-                        !user
-                    )
-                        return;
-
-
-                    const message =
-                        String(
-
-                            data.message ||
-                            ""
-
-                        )
-                            .replace(
-                                /[<>]/g,
-                                ""
-                            )
-                            .substring(
-                                0,
-                                300
-                            );
-
-
-                    if (
-                        !message
-                    )
-                        return;
-
-
-                    /* =====================
-                       MARLEY
-                    ===================== */
-
-                    if (
-
-                        message
-                            .trim()
-                            .toLowerCase()
-                            .replace(
-                                /[.!?]+$/g,
-                                ""
-                            ) ===
-                        "i love you marley"
-
-                    ) {
-
-                        broadcast({
-
-                            type:
-                                "marley",
-
-                            username:
-                                user.name
-
-                        });
-
-
-                        return;
-
-                    }
-
-
-                    /* =====================
-                       SAUVEGARDE GITHUB
-                    ===================== */
-
-                    queueChatSave(
-
-                        user.name,
-
+                    message:
                         message
 
-                    );
-
-
-                    /* =====================
-                       CHAT NORMAL
-                    ===================== */
-
-                    broadcast({
-
-                        type:
-                            "chat",
-
-                        username:
-                            user.name,
-
-                        message:
-                            message
-
-                    });
-
-                }
+                });
 
             }
         );
 
 
-        /* =========================
+        /* =================================================
            CLOSE
-        ========================= */
+        ================================================= */
 
         socket.on(
             "close",
@@ -1870,6 +2238,11 @@ wss.on(
                     return;
 
 
+                users.delete(
+                    socket
+                );
+
+
                 broadcast({
 
                     type:
@@ -1878,40 +2251,27 @@ wss.on(
                     username:
                         user.name
 
-                }, socket);
-
-
-                users.delete(
-                    socket
-                );
+                });
 
 
                 sendUsers();
 
 
                 console.log(
-
                     `${user.name} est parti.`
-
                 );
 
             }
         );
 
 
-        /* =========================
-           ERROR
-        ========================= */
-
         socket.on(
             "error",
             error => {
 
                 console.error(
-
-                    "WebSocket error:",
+                    "WebSocket:",
                     error.message
-
                 );
 
             }
@@ -1922,12 +2282,11 @@ wss.on(
 
 
 /* =====================================================
-   WEBSOCKET HEARTBEAT
+   WEBSOCKET KEEP ALIVE
 ===================================================== */
 
-const websocketHeartbeat =
+const heartbeat =
     setInterval(
-
         () => {
 
             wss.clients.forEach(
@@ -1937,13 +2296,6 @@ const websocketHeartbeat =
                         socket.isAlive ===
                         false
                     ) {
-
-                        console.log(
-
-                            "WebSocket inactif → fermeture."
-
-                        );
-
 
                         return socket.terminate();
 
@@ -1960,9 +2312,7 @@ const websocketHeartbeat =
             );
 
         },
-
         30000
-
     );
 
 
@@ -1971,7 +2321,7 @@ wss.on(
     () => {
 
         clearInterval(
-            websocketHeartbeat
+            heartbeat
         );
 
     }
@@ -1979,11 +2329,10 @@ wss.on(
 
 
 /* =====================================================
-   UPLOAD ERROR HANDLER
+   MULTER ERROR
 ===================================================== */
 
 app.use(
-
     (
         error,
         req,
@@ -1992,20 +2341,18 @@ app.use(
     ) => {
 
         if (
-
             error instanceof
             multer.MulterError
-
         ) {
 
             if (
-
                 error.code ===
                 "LIMIT_FILE_SIZE"
-
             ) {
 
-                return res.status(413).json({
+                return res.status(
+                    413
+                ).json({
 
                     error:
                         "Fichier trop volumineux. Maximum : 25 Mo."
@@ -2014,14 +2361,6 @@ app.use(
 
             }
 
-
-            return res.status(400).json({
-
-                error:
-                    error.message
-
-            });
-
         }
 
 
@@ -2029,7 +2368,9 @@ app.use(
             error
         ) {
 
-            return res.status(400).json({
+            return res.status(
+                400
+            ).json({
 
                 error:
                     error.message
@@ -2042,67 +2383,87 @@ app.use(
         next();
 
     }
-
 );
 
 
 /* =====================================================
-   SERVER
+   START
 ===================================================== */
 
-const PORT =
-    process.env.PORT ||
-    3000;
+async function startServer() {
+
+    try {
+
+        await initializeDatabase();
 
 
-server.listen(
+        server.listen(
+            PORT,
+            () => {
 
-    PORT,
+                console.log(
+                    `Serveur lancé sur le port ${PORT}`
+                );
 
-    () => {
 
-        console.log(
-            `Serveur lancé sur le port ${PORT}`
+                console.log(
+                    "GitHub owner:",
+                    GITHUB_OWNER ||
+                    "(manquant)"
+                );
+
+
+                console.log(
+                    "GitHub repo:",
+                    GITHUB_REPO ||
+                    "(manquant)"
+                );
+
+
+                console.log(
+                    "GitHub branch:",
+                    GITHUB_BRANCH
+                );
+
+
+                console.log(
+                    "GitHub token:",
+                    GITHUB_TOKEN
+                        ? "présent"
+                        : "MANQUANT"
+                );
+
+
+                console.log(
+                    "PostgreSQL:",
+                    process.env.DATABASE_URL
+                        ? "présent"
+                        : "MANQUANT"
+                );
+
+
+                console.log(
+                    "Sessions PostgreSQL activées."
+                );
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Impossible de démarrer le serveur:",
+            error
         );
 
 
-        console.log(
-            "GitHub owner:",
-            GITHUB_OWNER || "(manquant)"
-        );
-
-
-        console.log(
-            "GitHub repo:",
-            GITHUB_REPO || "(manquant)"
-        );
-
-
-        console.log(
-            "GitHub branch:",
-            GITHUB_BRANCH
-        );
-
-
-        console.log(
-            "GitHub token:",
-            GITHUB_TOKEN
-                ? "présent"
-                : "MANQUANT"
-        );
-
-
-        console.log(
-            "Media folder:",
-            MEDIA_FOLDER
-        );
-
-
-        console.log(
-            "Chat log folder:",
-            CHAT_LOG_FOLDER
+        process.exit(
+            1
         );
 
     }
 
-);
+}
+
+
+startServer();
