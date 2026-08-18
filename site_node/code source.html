@@ -3,6 +3,12 @@
 
 <head>
 
+<script src="https://unpkg.com/fengari-web/dist/fengari-web.js"></script>
+
+<script>
+console.log("FENGARI TEST :", typeof fengari);
+</script>
+
 <meta charset="UTF-8">
 
 <meta name="viewport"
@@ -1310,6 +1316,66 @@ height: 500px;
 }
 
 /* =====================================================
+   LUA // BOUTON EXECUTER
+===================================================== */
+
+.luaButton {
+
+    min-width: 45px;
+
+    height: 30px;
+
+    padding:
+        0 12px;
+
+    background:
+        #001a08;
+
+    color:
+        #00ff66;
+
+    border:
+        1px solid #00ff66;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size:
+        11px;
+
+    font-weight:
+        bold;
+
+    cursor:
+        pointer;
+
+    box-sizing:
+        border-box;
+}
+
+
+.luaButton:hover {
+
+    background:
+        #00ff66;
+
+    color:
+        #001a08;
+
+    box-shadow:
+        0 0 10px
+        rgba(0,255,102,.5);
+}
+
+
+.luaButton:active {
+
+    transform:
+        translateY(1px);
+}
+
+/* =====================================================
 LUA CONTENT
 ===================================================== */
 
@@ -1665,7 +1731,7 @@ font-family:
 
 font-size:
     12px;
-```
+
 
 }
 
@@ -1675,7 +1741,10 @@ CONTROLES
 
 #luaControls {
 
-```
+<button class="luaButton" id="luaRun">RUN</button>
+
+
+
 display:
     flex;
 
@@ -1696,7 +1765,7 @@ padding:
 
 border-top:
     1px solid rgba(0,255,102,.2);
-```
+
 
 }
 
@@ -1706,7 +1775,7 @@ BOUTONS LUA
 
 .luaButton {
 
-```
+
 min-width:
     45px;
 
@@ -1731,13 +1800,13 @@ cursor:
 
 font-weight:
     bold;
-```
+
 
 }
 
 .luaButton:hover {
 
-```
+
 background:
     #00ff66;
 
@@ -1746,16 +1815,16 @@ color:
 
 box-shadow:
     0 0 10px rgba(0,255,102,.5);
-```
+
 
 }
 
 .luaButton:active {
 
-```
+
 transform:
     translateY(1px);
-```
+
 
 }
 
@@ -2858,9 +2927,7 @@ MOBILE
     ▶ EXECUTER
 </button>
 
-<button id="luaClear" class="terminalButton">
-    CLEAR
-</button>
+
 
         </div>
 
@@ -7241,6 +7308,301 @@ winampRenderPlaylist();
     bootAnimation();
 
 })();
+
+/* =====================================================
+   LUA // FENGARI
+===================================================== */
+
+function runLuaCode() {
+
+    const editor =
+        document.getElementById("luaEditor");
+
+    const consoleBox =
+        document.getElementById("luaConsole");
+
+    if (!editor || !consoleBox) {
+        console.error("[LUA] Éléments introuvables.");
+        return;
+    }
+
+    const code =
+        editor.value;
+
+    consoleBox.innerHTML = "";
+
+
+    function addOutput(text, error = false) {
+
+        const line =
+            document.createElement("div");
+
+        line.className =
+            error
+                ? "luaOutput luaError"
+                : "luaOutput";
+
+        line.textContent =
+            String(text);
+
+        consoleBox.appendChild(line);
+
+        consoleBox.scrollTop =
+            consoleBox.scrollHeight;
+    }
+
+
+    if (!code.trim()) {
+
+        addOutput(
+            "[LUA] Aucun code à exécuter.",
+            true
+        );
+
+        return;
+    }
+
+
+    if (
+        typeof fengari === "undefined"
+    ) {
+
+        addOutput(
+            "[FENGARI ERROR] Fengari n'est pas chargé.",
+            true
+        );
+
+        return;
+    }
+
+
+    addOutput(
+        "[LUA] Exécution..."
+    );
+
+
+    try {
+
+        /*
+         * Fengari-web fournit directement
+         * fengari.load(source).
+         */
+
+        const luaFunction =
+            fengari.load(
+                code,
+                "DavidLua"
+            );
+
+
+        if (
+            typeof luaFunction !==
+            "function"
+        ) {
+
+            addOutput(
+                "[FENGARI ERROR] Impossible de compiler le code Lua.",
+                true
+            );
+
+            return;
+        }
+
+
+        /*
+         * On remplace temporairement print()
+         * pour envoyer les résultats dans
+         * notre console du site.
+         */
+
+        const oldPrint =
+            window.__davidLuaPrint;
+
+
+        window.__davidLuaPrint =
+            function () {
+
+                const values =
+                    Array.from(
+                        arguments
+                    );
+
+                addOutput(
+                    values.join("\t")
+                );
+            };
+
+
+        /*
+         * Pour que print() de Lua utilise
+         * notre fonction JavaScript.
+         */
+
+        const lua =
+            fengari.lua;
+
+
+        const to_luastring =
+            fengari.to_luastring;
+
+
+        const L =
+            fengari.L;
+
+
+        if (!L) {
+
+            addOutput(
+                "[FENGARI ERROR] État Lua introuvable.",
+                true
+            );
+
+            return;
+        }
+
+
+        lua.lua_pushjsfunction(
+            L,
+            function () {
+
+                const count =
+                    lua.lua_gettop(L);
+
+                const values = [];
+
+
+                for (
+                    let i = 1;
+                    i <= count;
+                    i++
+                ) {
+
+                    try {
+
+                        values.push(
+                            lua.lua_tojsstring(
+                                L,
+                                i
+                            )
+                        );
+
+                    }
+                    catch {
+
+                        values.push(
+                            "[valeur]"
+                        );
+
+                    }
+
+                }
+
+
+                addOutput(
+                    values.join("\t")
+                );
+
+
+                return 0;
+            }
+        );
+
+
+        lua.lua_setglobal(
+            L,
+            to_luastring("print")
+        );
+
+
+        /*
+         * Exécution du script.
+         */
+
+        luaFunction();
+
+
+        /*
+         * Restauration.
+         */
+
+        window.__davidLuaPrint =
+            oldPrint;
+
+
+        addOutput(
+            "[LUA] Exécution terminée."
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "[FENGARI ERROR]",
+            error
+        );
+
+
+        addOutput(
+            "[LUA ERROR] " +
+            (
+                error &&
+                error.message
+                    ? error.message
+                    : String(error)
+            ),
+            true
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   BOUTON EXECUTER
+===================================================== */
+
+const luaRunButton =
+    document.getElementById(
+        "luaRun"
+    );
+
+
+if (luaRunButton) {
+
+    luaRunButton.addEventListener(
+        "click",
+        runLuaCode
+    );
+
+}
+
+/* =====================================================
+   LUA // CLEAR CONSOLE
+===================================================== */
+
+const luaClearButton =
+    document.getElementById("luaClear");
+
+if (luaClearButton) {
+
+    luaClearButton.addEventListener(
+        "click",
+        function () {
+
+            const consoleBox =
+                document.getElementById("luaConsole");
+
+            if (!consoleBox) {
+                return;
+            }
+
+            consoleBox.innerHTML = "";
+
+        }
+    );
+
+}
 
 </script>
 
