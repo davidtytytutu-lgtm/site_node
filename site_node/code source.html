@@ -1296,6 +1296,545 @@ grid-template-rows:
     }
 }
 
+/* =====================================================
+LUA // FENGARI
+===================================================== */
+
+#luaPanel {
+
+grid-column: 1 / 4; 
+grid-row: 7; 
+min-width: 0; 
+min-height: 0; 
+height: 500px;
+}
+
+/* =====================================================
+LUA CONTENT
+===================================================== */
+
+#luaContent {
+
+
+position: absolute;
+
+top: 32px;
+
+left: 0;
+
+right: 0;
+
+bottom: 0;
+
+display: flex;
+
+flex-direction: row;
+
+gap: 10px;
+
+padding: 10px;
+
+overflow: hidden;
+
+min-width: 0;
+
+min-height: 0;
+
+
+}
+
+/* =====================================================
+LUA SOURCE
+===================================================== */
+
+#luaEditorSide {
+
+
+flex: 1;
+
+min-width: 0;
+
+min-height: 0;
+
+border:
+    1px solid rgba(0,255,102,.5);
+
+background:
+    rgba(0,10,4,.7);
+
+overflow: hidden;
+
+display: flex;
+
+flex-direction: column;
+
+
+}
+
+/* =====================================================
+CONSOLE
+===================================================== */
+
+#luaConsoleSide {
+
+
+flex: 1;
+
+min-width: 0;
+
+min-height: 0;
+
+border:
+    1px solid rgba(0,255,102,.5);
+
+background:
+    rgba(0,10,4,.7);
+
+overflow: hidden;
+
+display: flex;
+
+flex-direction: column;
+
+}
+
+
+
+/* =====================================================
+TITRES
+===================================================== */
+
+#luaEditorTitle {
+
+```
+height:
+    28px;
+
+min-height:
+    28px;
+
+display:
+    flex;
+
+align-items:
+    center;
+
+padding-left:
+    8px;
+
+border-bottom:
+    1px solid rgba(0,255,102,.4);
+
+background:
+    rgba(0,255,102,.06);
+
+font-size:
+    11px;
+
+font-weight:
+    bold;
+```
+
+}
+
+#luaConsoleTitle {
+
+```
+height:
+    28px;
+
+min-height:
+    28px;
+
+display:
+    flex;
+
+align-items:
+    center;
+
+padding-left:
+    8px;
+
+border-bottom:
+    1px solid rgba(0,255,102,.4);
+
+background:
+    rgba(0,255,102,.06);
+
+font-size:
+    11px;
+
+font-weight:
+    bold;
+```
+
+}
+
+#luaEditorWrapper {
+
+```
+flex: 1;
+
+display: flex;
+
+min-width: 0;
+
+min-height: 0;
+
+overflow: hidden;
+
+background:
+    #001a08;
+```
+
+}
+
+#luaLineNumbers {
+
+```
+width: 42px;
+
+min-width: 42px;
+
+padding:
+    10px 6px;
+
+box-sizing:
+    border-box;
+
+background:
+    #000d05;
+
+color:
+    rgba(0,255,102,.45);
+
+border-right:
+    1px solid rgba(0,255,102,.25);
+
+font-family:
+    "Courier New",
+    monospace;
+
+font-size:
+    12px;
+
+line-height:
+    18px;
+
+text-align:
+    right;
+
+user-select:
+    none;
+
+overflow:
+    hidden;
+
+white-space:
+    pre;
+```
+
+}
+
+#luaEditor {
+
+```
+flex:
+    1;
+
+width:
+    0;
+
+min-width:
+    0;
+
+min-height:
+    0;
+
+resize:
+    none;
+
+border:
+    0;
+
+outline:
+    none;
+
+padding:
+    10px;
+
+box-sizing:
+    border-box;
+
+background:
+    #001a08;
+
+color:
+    #00ff66;
+
+font-family:
+    "Courier New",
+    monospace;
+
+font-size:
+    12px;
+
+line-height:
+    18px;
+
+overflow:
+    auto;
+
+white-space:
+    pre;
+
+tab-size:
+    4;
+```
+
+}
+
+
+/* =====================================================
+ÉDITEUR LUA
+===================================================== */
+
+#luaEditor {
+flex: 1;
+width: 100%;
+min-width: 0;
+min-height: 0;
+
+```
+box-sizing: border-box;
+
+resize: none;
+
+border: 0;
+outline: none;
+
+padding: 10px;
+
+background: #001a08;
+color: #00ff66;
+
+font-family: "Courier New", monospace;
+font-size: 12px;
+line-height: 1.5;
+
+overflow: auto;
+
+
+}
+
+
+/* =====================================================
+CONSOLE
+===================================================== */
+
+#luaConsole {
+
+```
+flex:
+    1;
+
+min-height:
+    0;
+
+width:
+    100%;
+
+box-sizing:
+    border-box;
+
+padding:
+    10px;
+
+overflow-y:
+    auto;
+
+overflow-x:
+    hidden;
+
+white-space:
+    pre-wrap;
+
+font-family:
+    "Courier New",
+    monospace;
+
+font-size:
+    12px;
+```
+
+}
+
+/* =====================================================
+CONTROLES
+===================================================== */
+
+#luaControls {
+
+```
+display:
+    flex;
+
+align-items:
+    center;
+
+justify-content:
+    center;
+
+gap:
+    6px;
+
+flex-wrap:
+    wrap;
+
+padding:
+    8px;
+
+border-top:
+    1px solid rgba(0,255,102,.2);
+```
+
+}
+
+/* =====================================================
+BOUTONS LUA
+===================================================== */
+
+.luaButton {
+
+```
+min-width:
+    45px;
+
+height:
+    30px;
+
+background:
+    #001a08;
+
+color:
+    #00ff66;
+
+border:
+    1px solid #00ff66;
+
+font-family:
+    "Courier New",
+    monospace;
+
+cursor:
+    pointer;
+
+font-weight:
+    bold;
+```
+
+}
+
+.luaButton:hover {
+
+```
+background:
+    #00ff66;
+
+color:
+    #001a08;
+
+box-shadow:
+    0 0 10px rgba(0,255,102,.5);
+```
+
+}
+
+.luaButton:active {
+
+```
+transform:
+    translateY(1px);
+```
+
+}
+
+/* =====================================================
+STATUS
+===================================================== */
+
+#luaStatus {
+
+```
+height:
+    28px;
+
+min-height:
+    28px;
+
+display:
+    flex;
+
+align-items:
+    center;
+
+padding-left:
+    8px;
+
+border-top:
+    1px solid rgba(0,255,102,.2);
+
+font-size:
+    10px;
+
+opacity:
+    .7;
+```
+
+}
+
+/* =====================================================
+SORTIES
+===================================================== */
+
+.luaOutput {
+
+```
+margin-bottom:
+    4px;
+```
+
+}
+
+.luaError {
+
+```
+color:
+    #ff4444;
+```
+
+}
+
+/* =====================================================
+MOBILE
+===================================================== */
+
+@media (max-width: 800px) {
+
+```
+#luaContent {
+
+    grid-template-columns:
+        1fr;
+
+    grid-template-rows:
+        1fr 1fr;
+
+}
+```
+
+}
+
 
 /* =====================================================
    MATRIX
@@ -1573,9 +2112,7 @@ grid-template-rows:
     opacity: .8;
 }
 
-/* =====================================================
-   WINAMP
-===================================================== */
+
 
 /* =====================================================
    WINAMP
@@ -1988,6 +2525,7 @@ grid-template-rows:
 
     font-size: 11px;
 }
+
 /* =====================================================
    MOBILE
 ===================================================== */
@@ -2283,6 +2821,68 @@ grid-template-rows:
         </button>
 
     </div>
+
+</div>
+
+
+<!-- =====================================================
+     LUA CONSOLE
+===================================================== -->
+
+<div
+    id="luaPanel"
+    class="panel"
+>
+
+<div class="panelTitle">
+    [ LUA // FENGARI ]
+</div>
+
+<div id="luaContent">
+
+    <div id="luaEditorSide">
+
+        <div class="luaLabel">
+            [ LUA SOURCE ]
+        </div>
+
+        <textarea
+            id="luaEditor"
+            spellcheck="false"
+            placeholder='print("Hello David !")'
+        >print("Hello David !")</textarea>
+
+        <div id="luaControls">
+
+<button id="luaRun" class="terminalButton">
+    ▶ EXECUTER
+</button>
+
+<button id="luaClear" class="terminalButton">
+    CLEAR
+</button>
+
+        </div>
+
+    </div>
+
+
+    <div id="luaConsoleSide">
+
+        <div class="luaLabel">
+            [ CONSOLE ]
+        </div>
+
+        <div id="luaConsole"></div>
+
+        <div id="luaStatus">
+            LUA // READY
+        </div>
+
+    </div>
+
+</div>
+
 
 </div>
 
@@ -6618,6 +7218,7 @@ winampAudio.volume =
 
 
 winampRenderPlaylist();
+
 
 /* =====================================================
    INITIALISATION
