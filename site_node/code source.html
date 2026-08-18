@@ -4769,6 +4769,92 @@ async function terminalCommand(command) {
             .trim()
             .toLowerCase();
 
+/* COLOR */
+
+const colorParts =
+    command
+        .trim()
+        .split(/\s+/);
+
+if (
+    colorParts[0].toLowerCase() ===
+    "color"
+) {
+
+    if (
+        colorParts.length < 2
+    ) {
+
+        terminalPrint(
+            "[ERROR] Usage : color 0A"
+        );
+
+        return;
+    }
+
+
+    const colorCode =
+        colorParts[1]
+            .toUpperCase();
+
+
+    if (
+        !/^[0-9A-F]{2}$/.test(
+            colorCode
+        )
+    ) {
+
+        terminalPrint(
+            "[ERROR] Code couleur invalide : " +
+            colorCode
+        );
+
+        return;
+    }
+
+
+    if (
+        !CMD_COLORS[
+            colorCode.charAt(0)
+        ] ||
+        !CMD_COLORS[
+            colorCode.charAt(1)
+        ]
+    ) {
+
+        terminalPrint(
+            "[ERROR] Code couleur invalide."
+        );
+
+        return;
+    }
+
+
+    terminalBackgroundColor =
+        colorCode.charAt(0);
+
+    terminalTextColor =
+        colorCode.charAt(1);
+
+
+    terminalOutput.style.backgroundColor =
+        CMD_COLORS[
+            terminalBackgroundColor
+        ];
+
+    terminalOutput.style.color =
+        CMD_COLORS[
+            terminalTextColor
+        ];
+
+
+    terminalPrint(
+        "[OK] Couleur : " +
+        colorCode
+    );
+
+    return;
+}
 
     terminalPrint(
         terminalPrompt.textContent +
@@ -4864,53 +4950,232 @@ async function terminalCommand(command) {
         return;
     }
 
+/* =====================================================
+   COLOR HELP
+===================================================== */
+
+if (
+    lower === "color help" ||
+    lower === "help color"
+) {
+
+    terminalPrint(
+        "COLOR COMMAND"
+    );
+
+    terminalPrint(
+        "Usage: color XY"
+    );
+
+    terminalPrint(
+        "X = background"
+    );
+
+    terminalPrint(
+        "Y = text"
+    );
+
+    terminalPrint(
+        ""
+    );
+
+    terminalPrint(
+        "0 = Black"
+    );
+
+    terminalPrint(
+        "1 = Blue"
+    );
+
+    terminalPrint(
+        "2 = Green"
+    );
+
+    terminalPrint(
+        "3 = Aqua"
+    );
+
+    terminalPrint(
+        "4 = Red"
+    );
+
+    terminalPrint(
+        "5 = Purple"
+    );
+
+    terminalPrint(
+        "6 = Yellow"
+    );
+
+    terminalPrint(
+        "7 = Gray"
+    );
+
+    terminalPrint(
+        "8 = Dark Gray"
+    );
+
+    terminalPrint(
+        "9 = Light Blue"
+    );
+
+    terminalPrint(
+        "A = Light Green"
+    );
+
+    terminalPrint(
+        "B = Light Aqua"
+    );
+
+    terminalPrint(
+        "C = Light Red"
+    );
+
+    terminalPrint(
+        "D = Light Purple"
+    );
+
+    terminalPrint(
+        "E = Light Yellow"
+    );
+
+    terminalPrint(
+        "F = Bright White"
+    );
+
+    terminalPrint(
+        ""
+    );
+
+    terminalPrint(
+        "256 combinations available."
+    );
+
+    terminalPrint(
+        "Example: color 0A"
+    );
+
+    return;
+}
 
     /* HELP */
 
-    if (
-        lower ===
+if (
+    lower ===
+    "help"
+) {
+
+    terminalPrint(
+        "AVAILABLE COMMANDS:"
+    );
+
+    terminalPrint(
+        "dir /s"
+    );
+
+    terminalPrint(
+        "media"
+    );
+
+    terminalPrint(
+        "clear"
+    );
+
+    terminalPrint(
         "help"
-    ) {
+    );
 
-        terminalPrint(
-            "AVAILABLE COMMANDS:"
-        );
+    terminalPrint(
+        "color <code>"
+    );
 
-        terminalPrint(
-            "dir /s"
-        );
+    terminalPrint(
+        "help color"
+    );
 
-        terminalPrint(
-            "media"
-        );
+    terminalPrint(
+        "list color"
+    );
 
-        terminalPrint(
-            "clear"
-        );
+    terminalPrint(
+        "chat <message>"
+    );
 
-        terminalPrint(
-            "help"
-        );
+    terminalPrint(
+        "disco"
+    );
 
-        terminalPrint(
-            "chat <message>"
-        );
+    terminalPrint(
+        "broken"
+    );
 
-        terminalPrint(
-            "disco"
-        );
-
-        terminalPrint(
-            "broken"
-        );
-
-        terminalPrint(
-            "david"
-        );
+    terminalPrint(
+        "david"
+    );
 
         return;
     }
 
+/* =====================================================
+   LIST COLOR
+===================================================== */
+
+if (
+    lower === "list color"
+) {
+
+    terminalPrint(
+        "AVAILABLE COLOR COMBINATIONS:"
+    );
+
+    terminalPrint(
+        "Format: BACKGROUND + TEXT"
+    );
+
+    terminalPrint(
+        "--------------------------------"
+    );
+
+    const colorCodes =
+        "0123456789ABCDEF";
+
+    for (
+        let background = 0;
+        background < 16;
+        background++
+    ) {
+
+        let line = "";
+
+        for (
+            let text = 0;
+            text < 16;
+            text++
+        ) {
+
+            const code =
+                colorCodes[background] +
+                colorCodes[text];
+
+            line +=
+                code + "  ";
+        }
+
+        terminalPrint(
+            line.trim()
+        );
+    }
+
+    terminalPrint(
+        "--------------------------------"
+    );
+
+    terminalPrint(
+        "256 combinations available."
+    );
+
+    return;
+}
 
     /* MARLEY */
 
