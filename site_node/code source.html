@@ -1551,13 +1551,13 @@ overflow: hidden;
 
 background:
     #001a08;
-```
+
 
 }
 
 #luaLineNumbers {
 
-```
+
 width: 42px;
 
 min-width: 42px;
@@ -1598,13 +1598,12 @@ overflow:
 
 white-space:
     pre;
-```
+
 
 }
 
 #luaEditor {
 
-```
 flex:
     1;
 
@@ -1656,7 +1655,7 @@ white-space:
 
 tab-size:
     4;
-```
+
 
 }
 
@@ -1904,6 +1903,33 @@ MOBILE
 
 }
 
+/* =====================================================
+   TERMINAL CMD COLORS
+===================================================== */
+
+.terminal-cmd {
+    color: var(--terminal-text, #00ff66);
+}
+
+.terminal-cmd-system {
+    color: #00ff66;
+}
+
+.terminal-cmd-ok {
+    color: #00ff66;
+}
+
+.terminal-cmd-warning {
+    color: #ffff00;
+}
+
+.terminal-cmd-error {
+    color: #ff4444;
+}
+
+.terminal-cmd-info {
+    color: #00aaff;
+}
 
 /* =====================================================
    MATRIX
@@ -5026,7 +5052,6 @@ async function terminalCommand(command) {
     );
 }
 
-
 /* =====================================================
    TERMINAL INPUT
 ===================================================== */
@@ -7602,6 +7627,250 @@ if (luaClearButton) {
         }
     );
 
+}
+
+/* =====================================================
+   TERMINAL // WINDOWS CMD COLOR
+===================================================== */
+
+const CMD_COLORS = {
+
+    "0": "#000000",
+    "1": "#0000AA",
+    "2": "#00AA00",
+    "3": "#00AAAA",
+    "4": "#AA0000",
+    "5": "#AA00AA",
+    "6": "#AA5500",
+    "7": "#AAAAAA",
+
+    "8": "#555555",
+    "9": "#5555FF",
+    "A": "#55FF55",
+    "B": "#55FFFF",
+    "C": "#FF5555",
+    "D": "#FF55FF",
+    "E": "#FFFF55",
+    "F": "#FFFFFF"
+
+};
+
+
+/* Couleur actuelle du terminal */
+
+let terminalBackgroundColor = "0";
+let terminalTextColor = "A";
+
+
+function terminalApplyColor(code) {
+
+    if (!code) {
+        return false;
+    }
+
+    code =
+        String(code)
+            .trim()
+            .toUpperCase();
+
+
+    if (code.length === 1) {
+
+        code =
+            "0" + code;
+
+    }
+
+
+    if (code.length !== 2) {
+
+        return false;
+
+    }
+
+
+    const background =
+        code.charAt(0);
+
+    const text =
+        code.charAt(1);
+
+
+    if (
+        !CMD_COLORS[background] ||
+        !CMD_COLORS[text]
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+     * Même comportement que CMD :
+     * premier caractère = fond
+     * deuxième caractère = texte
+     */
+
+    terminalBackgroundColor =
+        background;
+
+    terminalTextColor =
+        text;
+
+
+    const terminal =
+        document.getElementById("terminal");
+
+    if (terminal) {
+
+        terminal.style.backgroundColor =
+            CMD_COLORS[background];
+
+        terminal.style.color =
+            CMD_COLORS[text];
+
+    }
+
+
+    return true;
+}
+
+/* =====================================================
+   TERMINAL // MESSAGE COLORÉ
+===================================================== */
+
+function terminalColoredMessage(
+    type,
+    message
+) {
+
+    const terminal =
+        document.getElementById("terminal");
+
+    if (!terminal) {
+        return;
+    }
+
+
+    const line =
+        document.createElement("div");
+
+
+    const label =
+        document.createElement("span");
+
+
+    const text =
+        document.createElement("span");
+
+
+    label.textContent =
+        "[" + type + "] ";
+
+
+    text.textContent =
+        message;
+
+
+    if (type === "SYSTEM") {
+
+        label.className =
+            "terminal-cmd-system";
+
+    }
+
+    else if (type === "OK") {
+
+        label.className =
+            "terminal-cmd-ok";
+
+    }
+
+    else if (type === "WARNING") {
+
+        label.className =
+            "terminal-cmd-warning";
+
+    }
+
+    else if (type === "ERROR") {
+
+        label.className =
+            "terminal-cmd-error";
+
+    }
+
+    else if (type === "INFO") {
+
+        label.className =
+            "terminal-cmd-info";
+
+    }
+
+    else {
+
+        label.className =
+            "terminal-cmd";
+
+    }
+
+
+    line.appendChild(label);
+
+    line.appendChild(text);
+
+
+    terminal.appendChild(line);
+
+
+    terminal.scrollTop =
+        terminal.scrollHeight;
+}
+
+function handleTerminalColorCommand(command) {
+
+    const parts = command.trim().split(/\s+/);
+
+    if (parts.length === 0) {
+        return false;
+    }
+
+    if (parts[0].toLowerCase() !== "color") {
+        return false;
+    }
+
+    if (parts.length === 1) {
+
+        terminalColoredMessage(
+            "INFO",
+            "Couleur actuelle : " +
+            terminalBackgroundColor +
+            terminalTextColor
+        );
+
+        return true;
+    }
+
+    const code = parts[1];
+
+    if (!terminalApplyColor(code)) {
+
+        terminalColoredMessage(
+            "ERROR",
+            "Syntaxe : color [0-F][0-F]"
+        );
+
+        return true;
+    }
+
+    terminalColoredMessage(
+        "OK",
+        "Couleur changée : " +
+        code.toUpperCase()
+    );
+
+    return true;
 }
 
 </script>
